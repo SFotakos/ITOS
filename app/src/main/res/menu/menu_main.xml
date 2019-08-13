@@ -1,0 +1,12 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context="io.github.sfotakos.itos.MainActivity">
+    <item android:id="@+id/action_main_menu_info"
+          android:title="@string/action_main_menu_info"
+          android:icon="@drawable/ic_info_white_24dp"
+          android:orderInCategory="100"
+          android:layout_width="24dp"
+          android:layout_height="24dp"
+          app:showAsAction="always"/>
+</menu>
