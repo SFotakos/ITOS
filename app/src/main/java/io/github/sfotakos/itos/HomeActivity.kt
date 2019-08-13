@@ -6,19 +6,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu
 import android.view.MenuItem
 
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_home.*
 
-class MainActivity : AppCompatActivity() {
+class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_home)
         setSupportActionBar(toolbar)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
+        menuInflater.inflate(R.menu.menu_home, menu)
         return true
     }
 
@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_main_menu_info -> {
+            R.id.action_home_menu_info -> {
                 Snackbar.make(this.toolbar, "Placeholder Info", Snackbar.LENGTH_LONG).show()
                 true
             }

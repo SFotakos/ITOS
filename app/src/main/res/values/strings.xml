@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">I.T.O.S.</string>
-    <string name="action_main_menu_info">Info</string>
+    <string name="action_home_menu_info">Info</string>
 </resources>
