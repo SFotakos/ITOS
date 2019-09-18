@@ -5,6 +5,7 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu
 import android.view.MenuItem
+import com.bumptech.glide.Glide
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
@@ -12,6 +13,7 @@ import io.github.sfotakos.itos.R
 import io.github.sfotakos.itos.data.entities.APOD
 
 import kotlinx.android.synthetic.main.activity_home.*
+import kotlinx.android.synthetic.main.content_home.*
 import org.json.JSONObject
 
 class HomeActivity : AppCompatActivity() {
@@ -20,6 +22,7 @@ class HomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
         setSupportActionBar(toolbar)
+        populateViews()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -46,5 +49,13 @@ class HomeActivity : AppCompatActivity() {
             applicationContext.assets.open("APOD_MOCK").bufferedReader().use {it.readText()}
 
         return Gson().fromJson<APOD>(jsonfile, object: TypeToken<APOD>(){}.type)
+    }
+
+    fun populateViews() {
+        val apod : APOD = getMockAPOD()
+        Glide.with(this).load(apod.url).fitCenter().into(apodPicture_imageView)
+        apodTitle_textView.text = apod.title
+        apodCopyright_textView.text = apod.copyright
+        apodDate_textView.text = apod.date
     }
 }
