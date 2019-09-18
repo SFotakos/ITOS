@@ -5,9 +5,14 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu
 import android.view.MenuItem
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import io.github.sfotakos.itos.R
+import io.github.sfotakos.itos.data.entities.APOD
 
 import kotlinx.android.synthetic.main.activity_home.*
+import org.json.JSONObject
 
 class HomeActivity : AppCompatActivity() {
 
@@ -34,5 +39,12 @@ class HomeActivity : AppCompatActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    fun getMockAPOD() : APOD {
+        val jsonfile: String =
+            applicationContext.assets.open("APOD_MOCK").bufferedReader().use {it.readText()}
+
+        return Gson().fromJson<APOD>(jsonfile, object: TypeToken<APOD>(){}.type)
     }
 }
