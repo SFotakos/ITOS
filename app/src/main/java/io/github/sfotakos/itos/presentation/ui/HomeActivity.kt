@@ -62,5 +62,6 @@ class HomeActivity : AppCompatActivity() {
         apodTitle_textView.text = apod.title
         apodCopyright_textView.text = apod.copyright
         apodDate_textView.text = apod.date
+        apodDescription_textView.text = apod.explanation
     }
 }
