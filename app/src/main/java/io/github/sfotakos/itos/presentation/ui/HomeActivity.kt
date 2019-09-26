@@ -54,7 +54,7 @@ class HomeActivity : AppCompatActivity() {
     fun populateViews(apod: APOD) {
         Glide.with(this).load(apod.url).fitCenter().into(apodPicture_imageView)
         apodTitle_textView.text = apod.title
-        apodCopyright_textView.text = apod.copyright
+        apodCopyright_textView.text = getString(R.string.copyright_format, apod.copyright)
         apodDate_textView.text = apod.date
         apodDescription_textView.text = apod.explanation
     }
