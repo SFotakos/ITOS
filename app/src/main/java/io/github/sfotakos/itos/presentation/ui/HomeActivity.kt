@@ -5,21 +5,15 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu
 import android.view.MenuItem
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.bumptech.glide.Glide
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.reflect.TypeToken
-import io.github.sfotakos.itos.APODViewModel
+import io.github.sfotakos.itos.presentation.viewmodel.APODViewModel
 import io.github.sfotakos.itos.R
 import io.github.sfotakos.itos.data.entities.APOD
 
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
-import org.json.JSONObject
 
 class HomeActivity : AppCompatActivity() {
 

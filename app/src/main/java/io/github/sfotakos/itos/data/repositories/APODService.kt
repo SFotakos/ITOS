@@ -1,4 +1,4 @@
-package io.github.sfotakos.itos
+package io.github.sfotakos.itos.data.repositories
 
 import io.github.sfotakos.itos.data.entities.APOD
 import retrofit2.Call

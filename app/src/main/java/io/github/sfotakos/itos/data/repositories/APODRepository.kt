@@ -1,15 +1,19 @@
-package io.github.sfotakos.itos
+package io.github.sfotakos.itos.data.repositories
 
 import android.content.Context
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import io.github.sfotakos.itos.App
 import io.github.sfotakos.itos.data.entities.APOD
 import kotlin.concurrent.thread
 
 class APODRepository {
+
+    companion object {
+        var BASEURL = "https://api.nasa.gov/"
+    }
 
     fun getAPOD(apodLiveData: MutableLiveData<APOD>) {
         thread {

@@ -1,8 +1,8 @@
 package io.github.sfotakos.itos
 
 import android.app.Application
-import android.util.Log
-import okhttp3.Interceptor
+import io.github.sfotakos.itos.data.repositories.APODRepository
+import io.github.sfotakos.itos.data.repositories.APODService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -12,8 +12,8 @@ class App : Application() {
 
     companion object {
 
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://api.nasa.gov/")
+        private val retrofit = Retrofit.Builder()
+            .baseUrl(APODRepository.BASEURL)
             .client(
                 OkHttpClient().newBuilder()
                     .addInterceptor(HttpLoggingInterceptor().apply {
@@ -24,6 +24,6 @@ class App : Application() {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
-        val apodService = retrofit.create(APODService::class.java)
+        val apodService: APODService = retrofit.create(APODService::class.java)
     }
 }
