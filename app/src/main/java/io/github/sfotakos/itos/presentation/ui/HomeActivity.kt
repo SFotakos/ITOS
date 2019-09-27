@@ -5,12 +5,14 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.bumptech.glide.Glide
 import io.github.sfotakos.itos.presentation.viewmodel.APODViewModel
 import io.github.sfotakos.itos.R
 import io.github.sfotakos.itos.data.entities.APOD
+import io.github.sfotakos.itos.network.NetworkUtils
 
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
@@ -48,7 +50,13 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        viewModel.getAPOD().observe(this, Observer { apod -> populateViews(apod) })
+
+        if (NetworkUtils.verifyAvailableNetwork(this)) {
+            viewModel.getApodObservable().observe(this, Observer { apod ->
+                if (apod.data != null) populateViews(apod.data)
+                else if (apod.apiException != null) showErrorMessage(apod.apiException)
+            })
+        }
     }
 
     fun populateViews(apod: APOD) {
@@ -57,5 +65,9 @@ class HomeActivity : AppCompatActivity() {
         apodCopyright_textView.text = getString(R.string.copyright_format, apod.copyright)
         apodDate_textView.text = apod.date
         apodDescription_textView.text = apod.explanation
+    }
+
+    fun showErrorMessage(errorMessage: String) {
+        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
     }
 }

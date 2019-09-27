@@ -2,11 +2,14 @@ package io.github.sfotakos.itos.data.repositories
 
 import android.content.Context
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import io.github.sfotakos.itos.App
 import io.github.sfotakos.itos.data.entities.APOD
+import io.github.sfotakos.itos.network.ResponseWrapper
+import retrofit2.Call
 import kotlin.concurrent.thread
 
 class APODRepository {
@@ -15,11 +18,19 @@ class APODRepository {
         var BASEURL = "https://api.nasa.gov/"
     }
 
-    fun getAPOD(apodLiveData: MutableLiveData<APOD>) {
+    fun getAPOD() : MediatorLiveData<ResponseWrapper<APOD>> {
+        val apodLiveData = MediatorLiveData<ResponseWrapper<APOD>>()
         thread {
-            val apod = App.apodService.getAPOD("DEMO_KEY").execute().body()
-            apodLiveData.postValue(apod!!)
+            val response = App.apodService.getAPOD("DEMO_KEY").execute()
+            val apodResponse : ResponseWrapper<APOD>
+            apodResponse = if (response.isSuccessful) {
+                ResponseWrapper(response.body(), null)
+            } else {
+                ResponseWrapper(null, response.message() + " " + response.code())
+            }
+            apodLiveData.postValue(apodResponse)
         }
+        return apodLiveData
     }
 
     fun getMockAPOD(context: Context) : LiveData<APOD> {
