@@ -8,6 +8,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import io.github.sfotakos.itos.App
 import io.github.sfotakos.itos.data.entities.APOD
+import io.github.sfotakos.itos.network.ApiException
 import io.github.sfotakos.itos.network.ResponseWrapper
 import retrofit2.Call
 import kotlin.concurrent.thread
@@ -26,7 +27,7 @@ class APODRepository {
             apodResponse = if (response.isSuccessful) {
                 ResponseWrapper(response.body(), null)
             } else {
-                ResponseWrapper(null, response.message() + " " + response.code())
+                ResponseWrapper(null, ApiException(response.code(), response.message()))
             }
             apodLiveData.postValue(apodResponse)
         }

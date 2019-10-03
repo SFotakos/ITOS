@@ -3,7 +3,7 @@ package io.github.sfotakos.itos.data.entities
 import com.google.gson.annotations.SerializedName
 
 data class APOD (
-    @SerializedName("copyright") val copyright : String,
+    @SerializedName("copyright") val copyright : String?,
     @SerializedName("date") val date : String,
     @SerializedName("explanation") val explanation : String,
     @SerializedName("hdurl") val hdurl : String,

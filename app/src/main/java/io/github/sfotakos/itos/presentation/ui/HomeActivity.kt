@@ -54,7 +54,7 @@ class HomeActivity : AppCompatActivity() {
         if (NetworkUtils.verifyAvailableNetwork(this)) {
             viewModel.getApodObservable().observe(this, Observer { apod ->
                 if (apod.data != null) populateViews(apod.data)
-                else if (apod.apiException != null) showErrorMessage(apod.apiException)
+                else if (apod.apiException != null) showErrorMessage(apod.apiException.getErrorMessage())
             })
         }
     }
@@ -62,7 +62,11 @@ class HomeActivity : AppCompatActivity() {
     fun populateViews(apod: APOD) {
         Glide.with(this).load(apod.url).fitCenter().into(apodPicture_imageView)
         apodTitle_textView.text = apod.title
-        apodCopyright_textView.text = getString(R.string.copyright_format, apod.copyright)
+        apodCopyright_textView.text = if(apod.copyright.isNullOrBlank()) {
+            getString(R.string.copyright_format, getString(R.string.public_domain))
+        } else {
+            getString(R.string.copyright_format, apod.copyright)
+        }
         apodDate_textView.text = apod.date
         apodDescription_textView.text = apod.explanation
     }
