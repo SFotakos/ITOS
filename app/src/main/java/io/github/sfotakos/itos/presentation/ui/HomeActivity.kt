@@ -54,10 +54,12 @@ class HomeActivity : AppCompatActivity() {
         val connectionLiveData = ConnectionLiveData(this)
         connectionLiveData.observe(this, Observer { isConnected ->
             isConnected?.let {
-                viewModel.getApodObservable().observe(this, Observer { apod ->
-                    if (apod.data != null) populateViews(apod.data)
-                    else if (apod.apiException != null) showErrorMessage(apod.apiException.getErrorMessage())
-                })
+                if (isConnected) {
+                    viewModel.getApodObservable().observe(this, Observer { apod ->
+                        if (apod.data != null) populateViews(apod.data)
+                        else if (apod.apiException != null) showErrorMessage(apod.apiException.getErrorMessage())
+                    })
+                }
             }
         })
     }
