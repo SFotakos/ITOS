@@ -12,7 +12,7 @@ import com.bumptech.glide.Glide
 import io.github.sfotakos.itos.presentation.viewmodel.APODViewModel
 import io.github.sfotakos.itos.R
 import io.github.sfotakos.itos.data.entities.APOD
-import io.github.sfotakos.itos.network.NetworkUtils
+import io.github.sfotakos.itos.network.ConnectionLiveData
 
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
@@ -51,12 +51,15 @@ class HomeActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        if (NetworkUtils.verifyAvailableNetwork(this)) {
-            viewModel.getApodObservable().observe(this, Observer { apod ->
-                if (apod.data != null) populateViews(apod.data)
-                else if (apod.apiException != null) showErrorMessage(apod.apiException.getErrorMessage())
-            })
-        }
+        val connectionLiveData = ConnectionLiveData(this)
+        connectionLiveData.observe(this, Observer { isConnected ->
+            isConnected?.let {
+                viewModel.getApodObservable().observe(this, Observer { apod ->
+                    if (apod.data != null) populateViews(apod.data)
+                    else if (apod.apiException != null) showErrorMessage(apod.apiException.getErrorMessage())
+                })
+            }
+        })
     }
 
     fun populateViews(apod: APOD) {

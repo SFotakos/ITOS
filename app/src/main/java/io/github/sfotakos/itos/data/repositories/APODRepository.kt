@@ -11,6 +11,9 @@ import io.github.sfotakos.itos.data.entities.APOD
 import io.github.sfotakos.itos.network.ApiException
 import io.github.sfotakos.itos.network.ResponseWrapper
 import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.io.IOException
 import kotlin.concurrent.thread
 
 class APODRepository {
@@ -22,14 +25,26 @@ class APODRepository {
     fun getAPOD() : MediatorLiveData<ResponseWrapper<APOD>> {
         val apodLiveData = MediatorLiveData<ResponseWrapper<APOD>>()
         thread {
-            val response = App.apodService.getAPOD("DEMO_KEY").execute()
-            val apodResponse : ResponseWrapper<APOD>
-            apodResponse = if (response.isSuccessful) {
-                ResponseWrapper(response.body(), null)
-            } else {
-                ResponseWrapper(null, ApiException(response.code(), response.message()))
-            }
-            apodLiveData.postValue(apodResponse)
+            App.apodService.getAPOD("DEMO_KEY").enqueue(object: Callback<APOD> {
+                override fun onResponse(call: Call<APOD>, response: Response<APOD>) {
+                    val apodResponse : ResponseWrapper<APOD> = if (response.isSuccessful) {
+                        ResponseWrapper(response.body(), null)
+                    } else {
+                        ResponseWrapper(null, ApiException(response.code(), response.message()))
+                    }
+                    ResponseWrapper(response.body(), null)
+                    apodLiveData.postValue(apodResponse)
+                }
+
+                override fun onFailure(call: Call<APOD>, t: Throwable) {
+                    val apodResponse : ResponseWrapper<APOD> = when (t){
+                        is IOException -> ResponseWrapper(null, ApiException(-1, "Network Error, please try again later"))
+                        else -> ResponseWrapper(null, ApiException(-1, t.localizedMessage))
+                    }
+                    apodLiveData.postValue(apodResponse)
+                }
+
+            })
         }
         return apodLiveData
     }
