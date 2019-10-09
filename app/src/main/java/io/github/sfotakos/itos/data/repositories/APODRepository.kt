@@ -1,9 +1,7 @@
 package io.github.sfotakos.itos.data.repositories
 
 import android.content.Context
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import io.github.sfotakos.itos.App
@@ -49,12 +47,14 @@ class APODRepository {
         return apodLiveData
     }
 
-    fun getMockAPOD(context: Context) : LiveData<APOD> {
-        val jsonfile: String =
-            context.assets.open("APOD_MOCK").bufferedReader().use {it.readText()}
-        // Create a LiveData with a String
-        val apod : MutableLiveData<APOD> = MutableLiveData()
-        apod.value = Gson().fromJson<APOD>(jsonfile, object: TypeToken<APOD>(){}.type)
-        return apod
+    fun getMockAPOD(context: Context) : MediatorLiveData<ResponseWrapper<APOD>> {
+        val apodLiveData = MediatorLiveData<ResponseWrapper<APOD>>()
+        thread {
+            val jsonfile: String =
+                context.assets.open("APOD_MOCK").bufferedReader().use { it.readText() }
+            apodLiveData.postValue(ResponseWrapper(
+                Gson().fromJson<APOD>(jsonfile, object : TypeToken<APOD>() {}.type), null))
+        }
+        return apodLiveData
     }
 }
