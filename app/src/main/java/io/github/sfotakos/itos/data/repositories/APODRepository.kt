@@ -12,6 +12,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.IOException
+import java.lang.Thread.sleep
 import kotlin.concurrent.thread
 
 class APODRepository {
@@ -50,6 +51,7 @@ class APODRepository {
     fun getMockAPOD(context: Context) : MediatorLiveData<ResponseWrapper<APOD>> {
         val apodLiveData = MediatorLiveData<ResponseWrapper<APOD>>()
         thread {
+            sleep(3000)
             val jsonfile: String =
                 context.assets.open("APOD_MOCK").bufferedReader().use { it.readText() }
             apodLiveData.postValue(ResponseWrapper(

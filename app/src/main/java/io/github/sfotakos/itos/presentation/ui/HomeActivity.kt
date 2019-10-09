@@ -1,10 +1,12 @@
 package io.github.sfotakos.itos.presentation.ui
 
+import android.opengl.Visibility
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -59,6 +61,7 @@ class HomeActivity : AppCompatActivity() {
             isConnected?.let {
                 if (isConnected) {
                     viewModel.getApodObservable().observe(this, Observer { apod ->
+                        loading_progressBar.visibility = View.GONE
                         if (apod.data != null) (apod_recyclerView.adapter as ApodAdapter).addApod(apod.data)
                         else if (apod.apiException != null) showErrorMessage(apod.apiException.getErrorMessage())
                     })

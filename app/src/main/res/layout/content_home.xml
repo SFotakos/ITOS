@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<FrameLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -9,8 +9,15 @@
         tools:showIn="@layout/activity_home"
         tools:context=".presentation.ui.HomeActivity">
 
-    <androidx.recyclerview.widget.RecyclerView
+    <ProgressBar
+            android:id="@+id/loading_progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminate="true" />
+
+        <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/apod_recyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
-</androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>
