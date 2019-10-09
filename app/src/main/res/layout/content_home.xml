@@ -6,68 +6,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:padding="16dp"
         tools:showIn="@layout/activity_home"
         tools:context=".presentation.ui.HomeActivity">
 
-    <TextView
-            android:id="@+id/apodTitle_textView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            android:textSize="20sp"
-            tools:text="APOD Title for testing"/>
-
-    <ImageView
-            android:id="@+id/apodPicture_imageView"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:minWidth="200dp"
-            android:minHeight="200dp"
-            android:scaleType="fitXY"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@+id/apodTitle_textView"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"/>
-
-    <TextView
-            android:id="@+id/apodCopyright_textView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/apodPicture_imageView"
-            app:layout_constraintStart_toStartOf="@+id/apodPicture_imageView"
-            android:layout_marginTop="8dp"
-            android:textSize="16sp"
-            android:textColor="@android:color/darker_gray"
-            tools:text="Nasa original picture"/>
-
-    <TextView
-            android:id="@+id/apodDate_textView"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/apodPicture_imageView"
-            app:layout_constraintStart_toEndOf="@+id/apodCopyright_textView"
-            app:layout_constraintEnd_toEndOf="@+id/apodPicture_imageView"
-            android:layout_marginTop="8dp"
-            android:textSize="16sp"
-            android:gravity="end"
-            android:textColor="@android:color/darker_gray"
-            tools:text="18/09/2019"/>
-
-    <TextView
-            android:id="@+id/apodDescription_textView"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            app:layout_constraintTop_toBottomOf="@+id/apodDate_textView"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="8dp"
-            android:textSize="16sp"
-            android:gravity="center"
-            android:textColor="@android:color/darker_gray"
-            tools:text="This is a picture from outer space, lets take a look Into The Outer Space"
-    />
-
+    <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/apod_recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

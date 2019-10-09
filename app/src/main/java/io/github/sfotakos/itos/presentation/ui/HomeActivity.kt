@@ -8,10 +8,10 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.bumptech.glide.Glide
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import io.github.sfotakos.itos.presentation.viewmodel.APODViewModel
 import io.github.sfotakos.itos.R
-import io.github.sfotakos.itos.data.entities.APOD
 import io.github.sfotakos.itos.network.ConnectionLiveData
 
 import kotlinx.android.synthetic.main.activity_home.*
@@ -20,6 +20,7 @@ import kotlinx.android.synthetic.main.content_home.*
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var viewModel: APODViewModel
+    private lateinit var connectionLiveData : ConnectionLiveData
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +28,10 @@ class HomeActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         viewModel = ViewModelProviders.of(this).get(APODViewModel::class.java)
+        connectionLiveData = ConnectionLiveData(this)
+
+        apod_recyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+        apod_recyclerView.adapter = ApodAdapter()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -50,30 +55,16 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
-        val connectionLiveData = ConnectionLiveData(this)
         connectionLiveData.observe(this, Observer { isConnected ->
             isConnected?.let {
                 if (isConnected) {
                     viewModel.getApodObservable().observe(this, Observer { apod ->
-                        if (apod.data != null) populateViews(apod.data)
+                        if (apod.data != null) (apod_recyclerView.adapter as ApodAdapter).addApod(apod.data)
                         else if (apod.apiException != null) showErrorMessage(apod.apiException.getErrorMessage())
                     })
                 }
             }
         })
-    }
-
-    fun populateViews(apod: APOD) {
-        Glide.with(this).load(apod.url).fitCenter().into(apodPicture_imageView)
-        apodTitle_textView.text = apod.title
-        apodCopyright_textView.text = if(apod.copyright.isNullOrBlank()) {
-            getString(R.string.copyright_format, getString(R.string.public_domain))
-        } else {
-            getString(R.string.copyright_format, apod.copyright)
-        }
-        apodDate_textView.text = apod.date
-        apodDescription_textView.text = apod.explanation
     }
 
     fun showErrorMessage(errorMessage: String) {
