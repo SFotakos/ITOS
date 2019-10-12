@@ -1,6 +1,5 @@
 package io.github.sfotakos.itos.presentation.ui
 
-import android.opengl.Visibility
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity;
@@ -8,13 +7,16 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.github.sfotakos.itos.presentation.viewmodel.APODViewModel
 import io.github.sfotakos.itos.R
+import io.github.sfotakos.itos.data.entities.APOD
 import io.github.sfotakos.itos.network.ConnectionLiveData
+import io.github.sfotakos.itos.network.ResponseWrapper
 
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
@@ -31,6 +33,20 @@ class HomeActivity : AppCompatActivity() {
 
         viewModel = ViewModelProviders.of(this).get(APODViewModel::class.java)
         connectionLiveData = ConnectionLiveData(this)
+
+        connectionLiveData.observe(this, Observer { isConnected ->
+            isConnected?.let {
+                if (isConnected) {
+                    val apodLiveData : LiveData<ResponseWrapper<APOD>> = viewModel.getApodLiveData()
+                    apodLiveData.removeObservers(this)
+                    apodLiveData.observe(this, Observer { apod ->
+                        loading_progressBar.visibility = View.GONE
+                        if (apod.data != null) (apod_recyclerView.adapter as ApodAdapter).addApod(apod.data)
+                        else if (apod.apiException != null) showErrorMessage(apod.apiException.getErrorMessage())
+                    })
+                }
+            }
+        })
 
         apod_recyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         apod_recyclerView.adapter = ApodAdapter()
@@ -55,22 +71,7 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        connectionLiveData.observe(this, Observer { isConnected ->
-            isConnected?.let {
-                if (isConnected) {
-                    viewModel.getApodObservable().observe(this, Observer { apod ->
-                        loading_progressBar.visibility = View.GONE
-                        if (apod.data != null) (apod_recyclerView.adapter as ApodAdapter).addApod(apod.data)
-                        else if (apod.apiException != null) showErrorMessage(apod.apiException.getErrorMessage())
-                    })
-                }
-            }
-        })
-    }
-
-    fun showErrorMessage(errorMessage: String) {
+    private fun showErrorMessage(errorMessage: String) {
         Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
     }
 }

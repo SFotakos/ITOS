@@ -1,6 +1,7 @@
 package io.github.sfotakos.itos.data.repositories
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.MediatorLiveData
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -21,8 +22,7 @@ class APODRepository {
         var BASEURL = "https://api.nasa.gov/"
     }
 
-    fun getAPOD() : MediatorLiveData<ResponseWrapper<APOD>> {
-        val apodLiveData = MediatorLiveData<ResponseWrapper<APOD>>()
+    fun fetchApod(liveData: MediatorLiveData<ResponseWrapper<APOD>>) {
         thread {
             App.apodService.getAPOD("DEMO_KEY").enqueue(object: Callback<APOD> {
                 override fun onResponse(call: Call<APOD>, response: Response<APOD>) {
@@ -32,7 +32,7 @@ class APODRepository {
                         ResponseWrapper(null, ApiException(response.code(), response.message()))
                     }
                     ResponseWrapper(response.body(), null)
-                    apodLiveData.postValue(apodResponse)
+                    liveData.postValue(apodResponse)
                 }
 
                 override fun onFailure(call: Call<APOD>, t: Throwable) {
@@ -40,23 +40,20 @@ class APODRepository {
                         is IOException -> ResponseWrapper(null, ApiException(-1, "Network Error, please try again later"))
                         else -> ResponseWrapper(null, ApiException(-1, t.localizedMessage))
                     }
-                    apodLiveData.postValue(apodResponse)
+                    liveData.postValue(apodResponse)
                 }
 
             })
         }
-        return apodLiveData
     }
 
-    fun getMockAPOD(context: Context) : MediatorLiveData<ResponseWrapper<APOD>> {
-        val apodLiveData = MediatorLiveData<ResponseWrapper<APOD>>()
+    fun getMockAPOD(context: Context, liveData: MediatorLiveData<ResponseWrapper<APOD>>){
         thread {
             sleep(3000)
             val jsonfile: String =
                 context.assets.open("APOD_MOCK").bufferedReader().use { it.readText() }
-            apodLiveData.postValue(ResponseWrapper(
+            liveData.postValue(ResponseWrapper(
                 Gson().fromJson<APOD>(jsonfile, object : TypeToken<APOD>() {}.type), null))
         }
-        return apodLiveData
     }
 }
