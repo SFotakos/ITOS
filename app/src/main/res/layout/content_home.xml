@@ -9,13 +9,6 @@
         tools:showIn="@layout/activity_home"
         tools:context=".presentation.ui.HomeActivity">
 
-    <ProgressBar
-            android:id="@+id/loading_progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:indeterminate="true" />
-
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/apod_recyclerView"
             android:layout_width="match_parent"

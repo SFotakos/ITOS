@@ -3,17 +3,18 @@ package io.github.sfotakos.itos.presentation.ui
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import io.github.sfotakos.itos.R
 import io.github.sfotakos.itos.data.entities.APOD
+import io.github.sfotakos.itos.network.ResponseWrapper
 import kotlinx.android.synthetic.main.item_apod.view.*
 import kotlin.math.roundToInt
 
-class ApodAdapter : RecyclerView.Adapter<ApodAdapter.ApodViewHolder>() {
-    private var apodList : ArrayList<APOD> = mutableListOf<APOD>() as ArrayList<APOD>
+class ApodAdapter : PagedListAdapter<ResponseWrapper<APOD>, ApodAdapter.ApodViewHolder>(ApodDiffUtilCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ApodViewHolder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.item_apod, parent, false)
@@ -21,14 +22,7 @@ class ApodAdapter : RecyclerView.Adapter<ApodAdapter.ApodViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: ApodViewHolder, position: Int) {
-        holder.bind(apodList[position])
-    }
-
-    override fun getItemCount(): Int = apodList.size
-
-    fun addApod(apod: APOD) {
-        apodList.add(apod)
-        notifyDataSetChanged()
+        holder.bind(getItem(position)!!.data!!)
     }
 
     class ApodViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

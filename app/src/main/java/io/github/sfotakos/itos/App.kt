@@ -12,8 +12,10 @@ class App : Application() {
 
     companion object {
 
+        var BASEURL = "https://api.nasa.gov/"
+
         private val retrofit = Retrofit.Builder()
-            .baseUrl(APODRepository.BASEURL)
+            .baseUrl(BASEURL)
             .client(
                 OkHttpClient().newBuilder()
                     .addInterceptor(HttpLoggingInterceptor().apply {

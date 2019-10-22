@@ -5,16 +5,14 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.widget.Toast
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.paging.DataSource
+import androidx.paging.LivePagedListBuilder
+import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import io.github.sfotakos.itos.presentation.viewmodel.APODViewModel
 import io.github.sfotakos.itos.R
 import io.github.sfotakos.itos.data.entities.APOD
+import io.github.sfotakos.itos.data.repositories.ApodDataSource
 import io.github.sfotakos.itos.network.ConnectionLiveData
 import io.github.sfotakos.itos.network.ResponseWrapper
 
@@ -23,34 +21,18 @@ import kotlinx.android.synthetic.main.content_home.*
 
 class HomeActivity : AppCompatActivity() {
 
-    private lateinit var viewModel: APODViewModel
     private lateinit var connectionLiveData : ConnectionLiveData
+
+    private val adapter = ApodAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
         setSupportActionBar(toolbar)
 
-        viewModel = ViewModelProviders.of(this).get(APODViewModel::class.java)
         connectionLiveData = ConnectionLiveData(this)
 
-        connectionLiveData.observe(this, Observer { isConnected ->
-            isConnected?.let {
-                if (isConnected) {
-                    val apodLiveData : LiveData<ResponseWrapper<APOD>> = viewModel.getApodLiveData()
-                    viewModel.getApod()
-                    apodLiveData.removeObservers(this)
-                    apodLiveData.observe(this, Observer { apod ->
-                        loading_progressBar.visibility = View.GONE
-                        if (apod.data != null) (apod_recyclerView.adapter as ApodAdapter).addApod(apod.data)
-                        else if (apod.apiException != null) showErrorMessage(apod.apiException.getErrorMessage())
-                    })
-                }
-            }
-        })
-
-        apod_recyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
-        apod_recyclerView.adapter = ApodAdapter()
+        initializeList()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -72,7 +54,31 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun showErrorMessage(errorMessage: String) {
-        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+    private fun initializeList() {
+        apod_recyclerView.layoutManager = LinearLayoutManager(this)
+        apod_recyclerView.adapter = adapter
+
+        val config = PagedList.Config.Builder()
+            .setInitialLoadSizeHint(5)
+            .setPageSize(3)
+            .setEnablePlaceholders(false)
+            .build()
+
+        val liveData = initializedPagedListBuilder(config).build()
+
+        liveData.observe(this, Observer<PagedList<ResponseWrapper<APOD>>> { pagedList ->
+            adapter.submitList(pagedList)
+        })
+    }
+
+    private fun initializedPagedListBuilder(config: PagedList.Config):
+            LivePagedListBuilder<String, ResponseWrapper<APOD>> {
+
+        val dataSourceFactory = object : DataSource.Factory<String, ResponseWrapper<APOD>>() {
+            override fun create(): DataSource<String, ResponseWrapper<APOD>> {
+                return ApodDataSource()
+            }
+        }
+        return LivePagedListBuilder<String, ResponseWrapper<APOD>>(dataSourceFactory, config)
     }
 }
