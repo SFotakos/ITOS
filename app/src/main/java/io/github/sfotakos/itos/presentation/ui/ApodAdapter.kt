@@ -10,6 +10,7 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import io.github.sfotakos.itos.R
 import io.github.sfotakos.itos.data.entities.APOD
 import kotlinx.android.synthetic.main.item_apod.view.*
+import kotlin.math.roundToInt
 
 class ApodAdapter : RecyclerView.Adapter<ApodAdapter.ApodViewHolder>() {
     private var apodList : ArrayList<APOD> = mutableListOf<APOD>() as ArrayList<APOD>
@@ -27,20 +28,21 @@ class ApodAdapter : RecyclerView.Adapter<ApodAdapter.ApodViewHolder>() {
 
     fun addApod(apod: APOD) {
         apodList.add(apod)
-        apodList.add(apod)
-        apodList.add(apod)
-        apodList.add(apod)
-        apodList.add(apod)
-        apodList.add(apod)
         notifyDataSetChanged()
     }
 
     class ApodViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind (apod: APOD) {
             val context = itemView.context
+            //TODO APOD API can return a video on occasion, as seen from 21/10
             Glide.with(context)
                 .load(apod.url)
-                .transform(CenterCrop(), RoundedCorners(Math.round(ScalingUtil.dpToPixel(context, 8f))))
+                .transform(CenterCrop(), RoundedCorners(
+                    ScalingUtil.dpToPixel(
+                        context,
+                        8f
+                    ).roundToInt()
+                ))
                 .into(itemView.apodPicture_imageView)
             itemView.apodTitle_textView.text = apod.title
             itemView.apodCopyright_textView.text = if(apod.copyright.isNullOrBlank()) {

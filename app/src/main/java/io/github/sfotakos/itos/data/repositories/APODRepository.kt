@@ -1,7 +1,6 @@
 package io.github.sfotakos.itos.data.repositories
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.MediatorLiveData
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -22,9 +21,9 @@ class APODRepository {
         var BASEURL = "https://api.nasa.gov/"
     }
 
-    fun fetchApod(liveData: MediatorLiveData<ResponseWrapper<APOD>>) {
+    fun fetchApodByDate(liveData: MediatorLiveData<ResponseWrapper<APOD>>, date: String) {
         thread {
-            App.apodService.getAPOD("DEMO_KEY").enqueue(object: Callback<APOD> {
+            App.apodService.getApodByDate("DEMO_KEY", date).enqueue(object: Callback<APOD> {
                 override fun onResponse(call: Call<APOD>, response: Response<APOD>) {
                     val apodResponse : ResponseWrapper<APOD> = if (response.isSuccessful) {
                         ResponseWrapper(response.body(), null)

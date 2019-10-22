@@ -38,6 +38,7 @@ class HomeActivity : AppCompatActivity() {
             isConnected?.let {
                 if (isConnected) {
                     val apodLiveData : LiveData<ResponseWrapper<APOD>> = viewModel.getApodLiveData()
+                    viewModel.getApod()
                     apodLiveData.removeObservers(this)
                     apodLiveData.observe(this, Observer { apod ->
                         loading_progressBar.visibility = View.GONE
