@@ -1,8 +1,10 @@
 package io.github.sfotakos.itos.data.repositories
 
+import android.util.Log
 import androidx.paging.ItemKeyedDataSource
 import io.github.sfotakos.itos.data.entities.APOD
 import io.github.sfotakos.itos.network.ResponseWrapper
+import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -37,7 +39,16 @@ class ApodDataSource : ItemKeyedDataSource<String, ResponseWrapper<APOD>>() {
     }
 
     override fun getKey(item: ResponseWrapper<APOD>): String {
-        return item.data!!.date
+        item.let {
+            return when {
+                item.data != null -> item.data.date
+                item.apiException != null -> item.apiException.key
+                else -> {
+                    Log.wtf("ApodDataSource", "Should never happen")
+                    throw(Exception("Should never happen"))
+                }
+            }
+        }
     }
 
     private fun getPreviousDay(calendar: Calendar): Calendar {

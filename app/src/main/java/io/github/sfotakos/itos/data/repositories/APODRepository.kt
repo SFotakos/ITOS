@@ -16,13 +16,14 @@ class APODRepository {
         val apods = mutableListOf<ResponseWrapper<APOD>>() as ArrayList<ResponseWrapper<APOD>>
 
         for (i in 0 .. offset) {
+            val dateString = getDateString(calendar)
             try {
-                val response = APODService.createService().getApodByDate("DEMO_KEY", getDateString(calendar)).execute()
+                val response = APODService.createService().getApodByDate("DEMO_KEY", dateString).execute()
                 getPreviousDay(calendar)
                 val apodResponse: ResponseWrapper<APOD> = if (response.isSuccessful) {
                     ResponseWrapper(response.body(), null)
                 } else {
-                    ResponseWrapper(null, ApiException(response.code(), response.message()))
+                    ResponseWrapper(null, ApiException(response.code(), response.message(), dateString))
                 }
                 ResponseWrapper(response.body(), null)
                 apods.add(apodResponse)
@@ -30,9 +31,9 @@ class APODRepository {
                 val apodResponse: ResponseWrapper<APOD> = when (exception) {
                     is IOException -> ResponseWrapper(
                         null,
-                        ApiException(-1, "Network Error, please try again later")
+                        ApiException(-1, "Network Error, please try again later", dateString)
                     )
-                    else -> ResponseWrapper(null, ApiException(-1, exception.localizedMessage))
+                    else -> ResponseWrapper(null, ApiException(-1, exception.localizedMessage, dateString))
                 }
                 apods.add(apodResponse)
             }

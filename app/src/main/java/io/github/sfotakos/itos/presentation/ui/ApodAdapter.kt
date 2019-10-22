@@ -1,8 +1,10 @@
 package io.github.sfotakos.itos.presentation.ui
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -10,8 +12,10 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import io.github.sfotakos.itos.R
 import io.github.sfotakos.itos.data.entities.APOD
+import io.github.sfotakos.itos.network.ApiException
 import io.github.sfotakos.itos.network.ResponseWrapper
 import kotlinx.android.synthetic.main.item_apod.view.*
+import java.lang.Exception
 import kotlin.math.roundToInt
 
 class ApodAdapter : PagedListAdapter<ResponseWrapper<APOD>, ApodAdapter.ApodViewHolder>(ApodDiffUtilCallback()) {
@@ -22,11 +26,13 @@ class ApodAdapter : PagedListAdapter<ResponseWrapper<APOD>, ApodAdapter.ApodView
     }
 
     override fun onBindViewHolder(holder: ApodViewHolder, position: Int) {
-        holder.bind(getItem(position)!!.data!!)
+       getItem(position)?.let {
+          holder.bind(it)
+       }
     }
 
     class ApodViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bind (apod: APOD) {
+        private fun bindSuccess (apod: APOD) {
             val context = itemView.context
             //TODO APOD API can return a video on occasion, as seen from 21/10
             Glide.with(context)
@@ -46,6 +52,21 @@ class ApodAdapter : PagedListAdapter<ResponseWrapper<APOD>, ApodAdapter.ApodView
             }
             itemView.apodDate_textView.text = apod.date
             itemView.apodDescription_textView.text = apod.explanation
+        }
+
+        private fun bindError(apiException: ApiException) {
+            Toast.makeText(itemView.context, apiException.getErrorMessage(), Toast.LENGTH_LONG).show()
+        }
+
+        fun bind (wrapperApod: ResponseWrapper<APOD>) {
+            when {
+                wrapperApod.data != null -> bindSuccess(wrapperApod.data)
+                wrapperApod.apiException != null -> bindError(wrapperApod.apiException)
+                else -> {
+                    Log.wtf("APODADAPTER", "Should never happen")
+                    throw(Exception("Should never happen"))
+                }
+            }
         }
     }
 }
