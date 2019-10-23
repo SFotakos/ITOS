@@ -19,7 +19,6 @@ class APODRepository {
             val dateString = getDateString(calendar)
             try {
                 val response = APODService.createService().getApodByDate("DEMO_KEY", dateString).execute()
-                getPreviousDay(calendar)
                 val apodResponse: ResponseWrapper<APOD> = if (response.isSuccessful) {
                     ResponseWrapper(response.body(), null)
                 } else {
@@ -36,6 +35,8 @@ class APODRepository {
                     else -> ResponseWrapper(null, ApiException(-1, exception.localizedMessage, dateString))
                 }
                 apods.add(apodResponse)
+            } finally {
+                getPreviousDay(calendar)
             }
         }
 

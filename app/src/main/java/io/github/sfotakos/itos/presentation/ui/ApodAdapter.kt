@@ -55,7 +55,11 @@ class ApodAdapter : PagedListAdapter<ResponseWrapper<APOD>, ApodAdapter.ApodView
         }
 
         private fun bindError(apiException: ApiException) {
-            Toast.makeText(itemView.context, apiException.getErrorMessage(), Toast.LENGTH_LONG).show()
+            itemView.apodPicture_imageView.setImageResource(0)
+            itemView.apodTitle_textView.text = apiException.getErrorMessage()
+            itemView.apodCopyright_textView.text = null
+            itemView.apodDate_textView.text = apiException.key
+            itemView.apodDescription_textView.text = null
         }
 
         fun bind (wrapperApod: ResponseWrapper<APOD>) {
