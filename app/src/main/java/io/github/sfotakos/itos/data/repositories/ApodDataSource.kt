@@ -8,48 +8,45 @@ import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 
-class ApodDataSource : ItemKeyedDataSource<String, ResponseWrapper<APOD>>() {
+class ApodDataSource : ItemKeyedDataSource<String, APOD>() {
+
+    //Unused
+    override fun loadBefore(params: LoadParams<String>,callback: LoadCallback<APOD>) {}
 
     override fun loadInitial(
         params: LoadInitialParams<String>,
-        callback: LoadInitialCallback<ResponseWrapper<APOD>>
+        callback: LoadInitialCallback<APOD>
     ) {
-        callback.onResult(APODRepository().fetchApods(params.requestedLoadSize))
+        processWrappedApods(APODRepository().fetchApods(params.requestedLoadSize), callback)
     }
 
     override fun loadAfter(
         params: LoadParams<String>,
-        callback: LoadCallback<ResponseWrapper<APOD>>
+        callback: LoadCallback<APOD>
     ) {
         val calendar = Calendar.getInstance()
         calendar.time =
             SimpleDateFormat(APODService.QUERY_DATE_FORMAT, Locale.ENGLISH)
             .parse(params.key)
 
-        callback.onResult(
-            APODRepository().fetchApods(
-                params.requestedLoadSize, getPreviousDay(calendar)))
+        processWrappedApods(APODRepository().fetchApods(
+            params.requestedLoadSize, getPreviousDay(calendar)), callback)
     }
 
-    override fun loadBefore(
-        params: LoadParams<String>,
-        callback: LoadCallback<ResponseWrapper<APOD>>
-    ) {
-        //unused
-    }
-
-    override fun getKey(item: ResponseWrapper<APOD>): String {
-        item.let {
-            return when {
-                item.data != null -> item.data.date
-                item.apiException != null -> item.apiException.key
-                else -> {
-                    Log.wtf("ApodDataSource", "Should never happen")
-                    throw(Exception("Should never happen"))
-                }
+    private fun processWrappedApods(wrappedApods: ResponseWrapper<List<APOD>>, callback: LoadCallback<APOD>) {
+        when {
+            wrappedApods.data != null ->
+                callback.onResult(wrappedApods.data)
+            wrappedApods.apiException != null ->
+                Log.d("ApodDataSource", wrappedApods.apiException.getErrorMessage())
+            else -> {
+                Log.wtf("ApodDataSource", "Should never happen")
+                throw(Exception("Should never happen"))
             }
         }
     }
+
+    override fun getKey(item: APOD): String { return item.date }
 
     private fun getPreviousDay(calendar: Calendar): Calendar {
         calendar.add(Calendar.DATE, -1)

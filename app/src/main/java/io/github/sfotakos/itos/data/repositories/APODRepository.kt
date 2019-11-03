@@ -12,35 +12,32 @@ import kotlin.collections.ArrayList
 class APODRepository {
 
     @SuppressLint("SimpleDateFormat")
-    fun fetchApods(offset: Int, calendar: Calendar = Calendar.getInstance()) : List<ResponseWrapper<APOD>>{
-        val apods = mutableListOf<ResponseWrapper<APOD>>() as ArrayList<ResponseWrapper<APOD>>
+    fun fetchApods(offset: Int, calendar: Calendar = Calendar.getInstance()) : ResponseWrapper<List<APOD>>{
+        val apods = mutableListOf<APOD>() as ArrayList<APOD>
 
         for (i in 0 .. offset) {
             val dateString = getDateString(calendar)
             try {
                 val response = APODService.createService().getApodByDate("DEMO_KEY", dateString).execute()
-                val apodResponse: ResponseWrapper<APOD> = if (response.isSuccessful) {
-                    ResponseWrapper(response.body(), null)
+                if (response.isSuccessful) {
+                    apods.add(response.body()!!)
                 } else {
-                    ResponseWrapper(null, ApiException(response.code(), response.message(), dateString))
+                    return ResponseWrapper(null, ApiException(response.code(), response.message(), dateString))
                 }
-                ResponseWrapper(response.body(), null)
-                apods.add(apodResponse)
             } catch (exception: Exception) {
-                val apodResponse: ResponseWrapper<APOD> = when (exception) {
+                return when (exception) {
                     is IOException -> ResponseWrapper(
                         null,
-                        ApiException(-1, "Network Error, please try again later", dateString)
-                    )
-                    else -> ResponseWrapper(null, ApiException(-1, exception.localizedMessage, dateString))
+                        ApiException(-1, "Network Error, please try again later", dateString))
+                    else -> ResponseWrapper(
+                        null, ApiException(-1, exception.localizedMessage, dateString))
                 }
-                apods.add(apodResponse)
             } finally {
                 getPreviousDay(calendar)
             }
         }
 
-        return apods
+        return ResponseWrapper(apods, null)
     }
 
     private fun getPreviousDay(calendar: Calendar): Calendar {

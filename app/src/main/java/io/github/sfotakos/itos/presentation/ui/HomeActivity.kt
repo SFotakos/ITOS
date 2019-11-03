@@ -66,19 +66,19 @@ class HomeActivity : AppCompatActivity() {
 
         val liveData = initializedPagedListBuilder(config).build()
 
-        liveData.observe(this, Observer<PagedList<ResponseWrapper<APOD>>> { pagedList ->
+        liveData.observe(this, Observer<PagedList<APOD>> { pagedList ->
             adapter.submitList(pagedList)
         })
     }
 
     private fun initializedPagedListBuilder(config: PagedList.Config):
-            LivePagedListBuilder<String, ResponseWrapper<APOD>> {
+            LivePagedListBuilder<String, APOD> {
 
-        val dataSourceFactory = object : DataSource.Factory<String, ResponseWrapper<APOD>>() {
-            override fun create(): DataSource<String, ResponseWrapper<APOD>> {
+        val dataSourceFactory = object : DataSource.Factory<String, APOD>() {
+            override fun create(): DataSource<String, APOD> {
                 return ApodDataSource()
             }
         }
-        return LivePagedListBuilder<String, ResponseWrapper<APOD>>(dataSourceFactory, config)
+        return LivePagedListBuilder<String, APOD>(dataSourceFactory, config)
     }
 }

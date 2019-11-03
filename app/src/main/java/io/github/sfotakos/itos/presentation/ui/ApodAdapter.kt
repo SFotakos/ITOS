@@ -18,7 +18,7 @@ import kotlinx.android.synthetic.main.item_apod.view.*
 import java.lang.Exception
 import kotlin.math.roundToInt
 
-class ApodAdapter : PagedListAdapter<ResponseWrapper<APOD>, ApodAdapter.ApodViewHolder>(ApodDiffUtilCallback()) {
+class ApodAdapter : PagedListAdapter<APOD, ApodAdapter.ApodViewHolder>(ApodDiffUtilCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ApodViewHolder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.item_apod, parent, false)
@@ -32,7 +32,8 @@ class ApodAdapter : PagedListAdapter<ResponseWrapper<APOD>, ApodAdapter.ApodView
     }
 
     class ApodViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private fun bindSuccess (apod: APOD) {
+
+        fun bind (apod: APOD) {
             val context = itemView.context
             //TODO APOD API can return a video on occasion, as seen from 21/10
             Glide.with(context)
@@ -52,25 +53,6 @@ class ApodAdapter : PagedListAdapter<ResponseWrapper<APOD>, ApodAdapter.ApodView
             }
             itemView.apodDate_textView.text = apod.date
             itemView.apodDescription_textView.text = apod.explanation
-        }
-
-        private fun bindError(apiException: ApiException) {
-            itemView.apodPicture_imageView.setImageResource(0)
-            itemView.apodTitle_textView.text = apiException.getErrorMessage()
-            itemView.apodCopyright_textView.text = null
-            itemView.apodDate_textView.text = apiException.key
-            itemView.apodDescription_textView.text = null
-        }
-
-        fun bind (wrapperApod: ResponseWrapper<APOD>) {
-            when {
-                wrapperApod.data != null -> bindSuccess(wrapperApod.data)
-                wrapperApod.apiException != null -> bindError(wrapperApod.apiException)
-                else -> {
-                    Log.wtf("APODADAPTER", "Should never happen")
-                    throw(Exception("Should never happen"))
-                }
-            }
         }
     }
 }
