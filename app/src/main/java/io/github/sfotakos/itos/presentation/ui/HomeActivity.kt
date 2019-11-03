@@ -6,15 +6,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu
 import android.view.MenuItem
 import androidx.lifecycle.Observer
-import androidx.paging.DataSource
 import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.github.sfotakos.itos.R
 import io.github.sfotakos.itos.data.entities.APOD
-import io.github.sfotakos.itos.data.repositories.ApodDataSource
+import io.github.sfotakos.itos.data.repositories.ApodBoundaryCallback
+import io.github.sfotakos.itos.data.repositories.db.ApodDb
 import io.github.sfotakos.itos.network.ConnectionLiveData
-import io.github.sfotakos.itos.network.ResponseWrapper
 
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
@@ -59,8 +58,8 @@ class HomeActivity : AppCompatActivity() {
         apod_recyclerView.adapter = adapter
 
         val config = PagedList.Config.Builder()
-            .setInitialLoadSizeHint(5)
-            .setPageSize(3)
+            .setInitialLoadSizeHint(8)
+            .setPageSize(4)
             .setEnablePlaceholders(false)
             .build()
 
@@ -72,13 +71,12 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun initializedPagedListBuilder(config: PagedList.Config):
-            LivePagedListBuilder<String, APOD> {
-
-        val dataSourceFactory = object : DataSource.Factory<String, APOD>() {
-            override fun create(): DataSource<String, APOD> {
-                return ApodDataSource()
-            }
-        }
-        return LivePagedListBuilder<String, APOD>(dataSourceFactory, config)
+            LivePagedListBuilder<Int, APOD> {
+        val database = ApodDb.create(this)
+        val livePageListBuilder = LivePagedListBuilder<Int, APOD>(
+            database.apodDao().queryAllApods(),
+            config)
+        livePageListBuilder.setBoundaryCallback(ApodBoundaryCallback(database))
+        return livePageListBuilder
     }
 }

@@ -4,6 +4,8 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
+apply plugin: 'kotlin-kapt'
+
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -46,8 +48,9 @@ dependencies {
 
     implementation "androidx.paging:paging-runtime-ktx:2.1.0"
 
-    implementation "androidx.room:room-runtime:2.2.0"
-    implementation "androidx.room:room-ktx:2.2.0"
+    implementation "androidx.room:room-runtime:2.2.1"
+    implementation "androidx.room:room-ktx:2.2.1"
+    kapt "androidx.room:room-compiler:2.2.1"
 
     implementation 'com.codesgood:justifiedtextview:1.1.0'
 
