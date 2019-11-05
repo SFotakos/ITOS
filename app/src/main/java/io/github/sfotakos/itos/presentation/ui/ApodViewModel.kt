@@ -10,18 +10,19 @@ import io.github.sfotakos.itos.data.repositories.ApodBoundaryCallback
 import io.github.sfotakos.itos.data.repositories.db.ApodDb
 import io.github.sfotakos.itos.network.ResponseWrapper
 
-class ApodViewModel(val db: ApodDb) : ViewModel(){
+class ApodViewModel(private val db: ApodDb) : ViewModel(){
 
     private val repoResult : MutableLiveData<ResponseWrapper<APOD>> = fetchApods()
 
-    val apods = Transformations.switchMap(repoResult, { it.pagedList })
-    val networkState = Transformations.switchMap(repoResult, { it.networkState })
+    val apods = Transformations.switchMap(repoResult) { it.pagedList }
+    val networkState = Transformations.switchMap(repoResult) { it.networkState }
 
     fun retry() {
-        val listing = repoResult?.value
+        val listing = repoResult.value
         listing?.retry?.invoke()
     }
 
+    //TODO remove magic numbers
     private fun fetchApods(): MutableLiveData<ResponseWrapper<APOD>> {
         val config = PagedList.Config.Builder()
             .setInitialLoadSizeHint(8)

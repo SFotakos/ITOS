@@ -5,6 +5,7 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -21,7 +22,7 @@ import kotlinx.android.synthetic.main.content_home.*
 
 class HomeActivity : AppCompatActivity() {
 
-    private val adapter = ApodAdapter()
+    private val adapter = ApodAdapter { viewModel.retry() }
 
     private lateinit var connectionLiveData : ConnectionLiveData
     private lateinit var viewModel: ApodViewModel
@@ -36,6 +37,15 @@ class HomeActivity : AppCompatActivity() {
             .of(this, ApodViewModelFactory(ApodDb.create(this)))
             .get(ApodViewModel::class.java)
         initializeList()
+        initializeNetworkObserver()
+    }
+
+    private fun initializeNetworkObserver() {
+        connectionLiveData.observe(this, Observer { isConnected ->
+            isConnected?.let {
+                viewModel.retry()
+            }
+        })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -43,10 +53,14 @@ class HomeActivity : AppCompatActivity() {
         return true
     }
 
+
+    //TODO info about the app
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_home_menu_info -> {
                 Snackbar.make(this.toolbar, "Placeholder Info", Snackbar.LENGTH_LONG).show()
+                //TODO add attributions here
+                //https://www.freevector.com/nasas-space-shuttle-vector-26189#
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -61,9 +75,9 @@ class HomeActivity : AppCompatActivity() {
             adapter.submitList(it)
         })
 
-//        viewModel.networkState.observe(this, Observer {
-//            adapter.setNetworkState(it)
-//        })
+        viewModel.networkState.observe(this, Observer {
+            adapter.setNetworkState(it)
+        })
     }
 
     class ApodViewModelFactory(private val db: ApodDb) : ViewModelProvider.Factory {

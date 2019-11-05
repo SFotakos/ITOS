@@ -5,6 +5,7 @@
         android:layout_height="wrap_content"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
+        android:background="@color/colorBackground"
         android:padding="16dp">
 
     <TextView
@@ -16,7 +17,20 @@
             app:layout_constraintStart_toStartOf="parent"
             android:textSize="20sp"
             android:textStyle="bold"
+            android:textColor="@android:color/white"
             tools:text="APOD Title for testing"/>
+
+    <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/imageLoading"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:lottie_rawRes="@raw/finding_image"
+            app:lottie_loop="true"
+            app:lottie_autoPlay="true"
+            app:layout_constraintTop_toTopOf="@+id/apodPicture_imageView"
+            app:layout_constraintBottom_toBottomOf="@+id/apodPicture_imageView"
+            app:layout_constraintEnd_toEndOf="@+id/apodPicture_imageView"
+            app:layout_constraintStart_toStartOf="@+id/apodPicture_imageView"/>
 
     <ImageView
             android:id="@+id/apodPicture_imageView"
@@ -32,41 +46,43 @@
 
     <TextView
             android:id="@+id/apodCopyright_textView"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@+id/apodPicture_imageView"
             app:layout_constraintStart_toStartOf="@+id/apodPicture_imageView"
+            app:layout_constraintEnd_toStartOf="@+id/apodDate_textView"
+            app:layout_constraintBottom_toTopOf="@+id/apodDescription_textView"
             android:layout_marginTop="8dp"
             android:textStyle="italic"
             android:textSize="16sp"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="@android:color/white"
             tools:text="Nasa original picture"/>
 
     <TextView
             android:id="@+id/apodDate_textView"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@+id/apodPicture_imageView"
-            app:layout_constraintStart_toEndOf="@+id/apodCopyright_textView"
             app:layout_constraintEnd_toEndOf="@+id/apodPicture_imageView"
+            app:layout_constraintBottom_toTopOf="@+id/apodDescription_textView"
             android:layout_marginTop="8dp"
             android:textStyle="italic"
             android:textSize="16sp"
             android:gravity="end"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="@android:color/white"
             tools:text="18/09/2019"/>
 
     <com.codesgood.views.JustifiedTextView
             android:id="@+id/apodDescription_textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/apodDate_textView"
+            app:layout_constraintTop_toBottomOf="@+id/apodCopyright_textView"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:justificationMode="inter_word"
             android:layout_marginTop="8dp"
             android:textSize="16sp"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="@android:color/white"
             tools:text="This is a picture from outer space, lets take a look Into The Outer Space"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

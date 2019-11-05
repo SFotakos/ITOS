@@ -6,7 +6,6 @@ import androidx.paging.PagedList
 import androidx.paging.PagingRequestHelper
 import io.github.sfotakos.itos.data.entities.APOD
 import io.github.sfotakos.itos.data.repositories.db.ApodDb
-import io.github.sfotakos.itos.network.ResponseWrapper
 import io.github.sfotakos.itos.network.createStatusLiveData
 import retrofit2.Call
 import retrofit2.Callback
@@ -14,20 +13,21 @@ import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
-import kotlin.concurrent.thread
 
 class ApodBoundaryCallback (private val db: ApodDb) :  PagedList.BoundaryCallback<APOD>() {
 
+    //TODO add multi thread executor
     val helper = PagingRequestHelper(Executors.newSingleThreadExecutor())
     val networkState = helper.createStatusLiveData()
 
+    //TODO should this be here?
     private val pageSize = 4
 
     override fun onZeroItemsLoaded() {
         super.onZeroItemsLoaded()
         helper.runIfNotRunning(PagingRequestHelper.RequestType.INITIAL) {
             APODService.createService()
-                .getApodByDate("DEMO_KEY", getDateString(Calendar.getInstance()))
+                .getApodByDate("***REMOVED***", getDateString(Calendar.getInstance()))
                 .enqueue(createWebserviceCallback(it))
         }
     }
@@ -38,19 +38,18 @@ class ApodBoundaryCallback (private val db: ApodDb) :  PagedList.BoundaryCallbac
         calendar.time =
             SimpleDateFormat(APODService.QUERY_DATE_FORMAT, Locale.ENGLISH)
                 .parse(itemAtEnd.date)
-
-
             fetchApods(getPreviousDay(calendar))
     }
 
     private fun fetchApods(calendar: Calendar = Calendar.getInstance()) {
-        for (i in 0..pageSize) {
+        //TODO effectively only calls it once, because of runIfNotRunning
+//        for (i in 0..pageSize) {
             helper.runIfNotRunning(PagingRequestHelper.RequestType.AFTER) {
                 APODService.createService()
-                    .getApodByDate("DEMO_KEY", getDateString(calendar))
+                    .getApodByDate("***REMOVED***", getDateString(calendar))
                     .enqueue(createWebserviceCallback(it))
             }
-        }
+//        }
     }
 
     private fun createWebserviceCallback(it: PagingRequestHelper.Request.Callback)
@@ -59,6 +58,7 @@ class ApodBoundaryCallback (private val db: ApodDb) :  PagedList.BoundaryCallbac
             override fun onFailure(
                 call: Call<APOD>,
                 t: Throwable) {
+                //TODO treat error to differ between network and parsing errors.
                 it.recordFailure(t)
             }
 
@@ -66,23 +66,27 @@ class ApodBoundaryCallback (private val db: ApodDb) :  PagedList.BoundaryCallbac
                 call: Call<APOD>,
                 response: Response<APOD>
             ) {
-                val apod: APOD? = response.body()
-                val error = response.errorBody()
-                when {
-                    apod != null -> {
-                        Executors.newSingleThreadExecutor().execute{ db.apodDao().insertApod(apod) }
-                        it.recordSuccess()
+                if (response.isSuccessful) {
+                    val apod: APOD? = response.body()
+                    if (apod != null) {
+                        Executors.newSingleThreadExecutor().execute{
+                            db.apodDao().insertApod(apod)
+                            it.recordSuccess()
+                        }
+                    } else {
+                        recordFailure(it, "APOD must not be null")
                     }
-                    error != null -> {
-                        Log.d("ApodDataSource", error.string())
-                    }
-                    else -> {
-                        Log.wtf("ApodDataSource", "Should never happen")
-                        throw(Exception("Should never happen"))
-                    }
+                } else {
+                    //TODO proper error treatment
+                    recordFailure(it, response.errorBody()!!.string())
                 }
             }
         }
+    }
+
+    private fun recordFailure(it: PagingRequestHelper.Request.Callback, error: String){
+        Log.d("ApodDataSource", error)
+        it.recordFailure(Throwable(error))
     }
 
     private fun getPreviousDay(calendar: Calendar): Calendar {
@@ -95,5 +99,4 @@ class ApodBoundaryCallback (private val db: ApodDb) :  PagedList.BoundaryCallbac
         val dateFormat = SimpleDateFormat(APODService.QUERY_DATE_FORMAT)
         return dateFormat.format(calendar.time)
     }
-
 }

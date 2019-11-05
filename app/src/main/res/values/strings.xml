@@ -4,4 +4,5 @@
 
     <string name="copyright_format">\u00a9 %1$s</string>
     <string name="public_domain">Public Domain</string>
+    <string name="retry">retry</string>
 </resources>
