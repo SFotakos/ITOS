@@ -10,7 +10,7 @@ import io.github.sfotakos.itos.data.entities.APOD
 @Dao
 interface ApodDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertApod(posts : List<APOD>)
+    fun insertApod(posts : APOD)
 
     @Query("SELECT * FROM APOD")
     fun queryAllApods() : DataSource.Factory<Int, APOD>

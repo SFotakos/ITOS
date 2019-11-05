@@ -1,10 +1,8 @@
 package io.github.sfotakos.itos.presentation.ui
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -12,10 +10,7 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import io.github.sfotakos.itos.R
 import io.github.sfotakos.itos.data.entities.APOD
-import io.github.sfotakos.itos.network.ApiException
-import io.github.sfotakos.itos.network.ResponseWrapper
 import kotlinx.android.synthetic.main.item_apod.view.*
-import java.lang.Exception
 import kotlin.math.roundToInt
 
 class ApodAdapter : PagedListAdapter<APOD, ApodAdapter.ApodViewHolder>(ApodDiffUtilCallback()) {
