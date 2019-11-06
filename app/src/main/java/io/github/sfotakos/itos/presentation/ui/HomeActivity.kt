@@ -64,6 +64,7 @@ class HomeActivity : AppCompatActivity() {
                 //https://www.flaticon.com/free-icon/asteroid_2229768
                 //https://www.fontspace.com/c%C3%A9-al/space-galaxy
                 //https://www.fontspace.com/heaven-castro/izayoi-monospaced
+                //https://www.flaticon.com/free-icon/galaxy_124567
                 true
             }
             else -> super.onOptionsItemSelected(item)
