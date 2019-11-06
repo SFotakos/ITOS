@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -90,13 +91,15 @@ class ApodAdapter(private val retryCallback: () -> Unit):
 
     class ApodViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        val requestListener = object : RequestListener<Drawable> {
+        private val requestListener = object : RequestListener<Drawable> {
             override fun onLoadFailed(
                 e: GlideException?,
                 model: Any?,
                 target: Target<Drawable>?,
                 isFirstResource: Boolean
             ): Boolean {
+                itemView.apodPicture_imageView.visibility = View.VISIBLE
+                itemView.imageLoading.visibility = View.GONE
                 return false
             }
 
@@ -121,8 +124,7 @@ class ApodAdapter(private val retryCallback: () -> Unit):
             Glide.with(context)
                 .load(apod.url)
                 .listener(requestListener)
-                .placeholder(ResourcesCompat.getDrawable(
-                    context.resources, R.drawable.ic_nasa_vector_5, null))
+                .error(ContextCompat.getDrawable(context, R.drawable.ic_asteroid))
                 .transform(CenterCrop(), RoundedCorners(
                     ScalingUtil.dpToPixel(context,8f).roundToInt()
                 ))

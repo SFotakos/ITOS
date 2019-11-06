@@ -5,20 +5,20 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
-import io.github.sfotakos.itos.R
 import io.github.sfotakos.itos.data.entities.APOD
 import io.github.sfotakos.itos.data.repositories.db.ApodDb
 import io.github.sfotakos.itos.network.ConnectionLiveData
 
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
+import androidx.core.content.ContextCompat
+import io.github.sfotakos.itos.R
 
 class HomeActivity : AppCompatActivity() {
 
@@ -49,7 +49,7 @@ class HomeActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_home, menu)
+        menuInflater.inflate(io.github.sfotakos.itos.R.menu.menu_home, menu)
         return true
     }
 
@@ -61,6 +61,8 @@ class HomeActivity : AppCompatActivity() {
                 Snackbar.make(this.toolbar, "Placeholder Info", Snackbar.LENGTH_LONG).show()
                 //TODO add attributions here
                 //https://www.freevector.com/nasas-space-shuttle-vector-26189#
+                //https://www.flaticon.com/free-icon/explosion_616500
+                //https://www.flaticon.com/free-icon/asteroid_2229768
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -70,6 +72,8 @@ class HomeActivity : AppCompatActivity() {
     private fun initializeList() {
         apod_recyclerView.layoutManager = LinearLayoutManager(this)
         apod_recyclerView.adapter = adapter
+        apod_recyclerView.addItemDecoration(
+            ApodItemDecoration(ContextCompat.getDrawable(this, R.drawable.divider_apod)!!))
 
         viewModel.apods.observe(this, Observer<PagedList<APOD>> {
             adapter.submitList(it)

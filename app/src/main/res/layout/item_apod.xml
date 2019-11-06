@@ -5,7 +5,6 @@
         android:layout_height="wrap_content"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
-        android:background="@color/colorBackground"
         android:padding="16dp">
 
     <TextView
@@ -24,7 +23,7 @@
             android:id="@+id/imageLoading"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:lottie_rawRes="@raw/finding_image"
+            app:lottie_rawRes="@raw/rocket"
             app:lottie_loop="true"
             app:lottie_autoPlay="true"
             app:layout_constraintTop_toTopOf="@+id/apodPicture_imageView"
