@@ -18,7 +18,6 @@ import io.github.sfotakos.itos.network.ConnectionLiveData
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
 import androidx.core.content.ContextCompat
-import io.github.sfotakos.itos.R
 
 class HomeActivity : AppCompatActivity() {
 
@@ -29,13 +28,15 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_home)
+        setContentView(io.github.sfotakos.itos.R.layout.activity_home)
         setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
         connectionLiveData = ConnectionLiveData(this)
         viewModel = ViewModelProviders
             .of(this, ApodViewModelFactory(ApodDb.create(this)))
             .get(ApodViewModel::class.java)
+
         initializeList()
         initializeNetworkObserver()
     }
@@ -57,12 +58,12 @@ class HomeActivity : AppCompatActivity() {
     //TODO info about the app
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_home_menu_info -> {
+            io.github.sfotakos.itos.R.id.action_home_menu_info -> {
                 Snackbar.make(this.toolbar, "Placeholder Info", Snackbar.LENGTH_LONG).show()
                 //TODO add attributions here
-                //https://www.freevector.com/nasas-space-shuttle-vector-26189#
-                //https://www.flaticon.com/free-icon/explosion_616500
                 //https://www.flaticon.com/free-icon/asteroid_2229768
+                //https://www.fontspace.com/c%C3%A9-al/space-galaxy
+                //https://www.fontspace.com/heaven-castro/izayoi-monospaced
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -73,7 +74,7 @@ class HomeActivity : AppCompatActivity() {
         apod_recyclerView.layoutManager = LinearLayoutManager(this)
         apod_recyclerView.adapter = adapter
         apod_recyclerView.addItemDecoration(
-            ApodItemDecoration(ContextCompat.getDrawable(this, R.drawable.divider_apod)!!))
+            ApodItemDecoration(ContextCompat.getDrawable(this, io.github.sfotakos.itos.R.drawable.divider_apod)!!))
 
         viewModel.apods.observe(this, Observer<PagedList<APOD>> {
             adapter.submitList(it)
