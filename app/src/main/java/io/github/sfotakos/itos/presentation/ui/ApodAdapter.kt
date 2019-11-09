@@ -26,7 +26,7 @@ import kotlin.math.roundToInt
 
 //TODO proper error and APOD layout
 //TODO separate view holders from adapter
-class ApodAdapter(private val retryCallback: () -> Unit):
+class ApodAdapter(val listener: ApodAdapterListener, private val retryCallback: () -> Unit):
     PagedListAdapter<APOD, RecyclerView.ViewHolder>(ApodDiffUtilCallback()) {
 
     private var networkState: NetworkState? = null
@@ -36,7 +36,7 @@ class ApodAdapter(private val retryCallback: () -> Unit):
             //TODO justifiedText not working on lower API levels
             R.layout.item_apod -> {
                 ApodViewHolder(LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_apod, parent, false))
+                    .inflate(R.layout.item_apod, parent, false), listener)
             }
             R.layout.network_state_item -> {
                 NetworkStateItemViewHolder(LayoutInflater.from(parent.context)
@@ -87,7 +87,7 @@ class ApodAdapter(private val retryCallback: () -> Unit):
         }
     }
 
-    class ApodViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class ApodViewHolder(itemView: View, val listener: ApodAdapterListener) : RecyclerView.ViewHolder(itemView) {
 
         private val requestListener = object : RequestListener<Drawable> {
             override fun onLoadFailed(
@@ -118,6 +118,9 @@ class ApodAdapter(private val retryCallback: () -> Unit):
             val context = itemView.context
             //TODO APOD API can return a video on occasion, as seen from 21/10
             itemView.apodPicture_imageView.visibility = View.INVISIBLE
+            itemView.apodPicture_imageView.setOnClickListener {
+                listener.zoomImageFromThumb(itemView.apodPicture_imageView, apod.url)
+            }
             itemView.imageLoading.visibility = View.VISIBLE
             Glide.with(context)
                 .load(apod.url)
@@ -165,5 +168,9 @@ class ApodAdapter(private val retryCallback: () -> Unit):
                 }
             }
         }
+    }
+
+    interface ApodAdapterListener {
+        fun zoomImageFromThumb(thumbView: View, imageUrl: String)
     }
 }
