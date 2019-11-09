@@ -2,7 +2,6 @@ package io.github.sfotakos.itos.presentation.ui
 
 import androidx.recyclerview.widget.DiffUtil
 import io.github.sfotakos.itos.data.entities.APOD
-import io.github.sfotakos.itos.network.ResponseWrapper
 
 class ApodDiffUtilCallback : DiffUtil.ItemCallback<APOD>() {
     override fun areItemsTheSame(oldItem: APOD, newItem: APOD): Boolean {

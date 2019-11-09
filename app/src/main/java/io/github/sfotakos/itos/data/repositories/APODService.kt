@@ -1,6 +1,5 @@
 package io.github.sfotakos.itos.data.repositories
 
-import io.github.sfotakos.itos.App.Companion.BASEURL
 import io.github.sfotakos.itos.BuildConfig
 import io.github.sfotakos.itos.data.entities.APOD
 import okhttp3.OkHttpClient
@@ -29,14 +28,15 @@ interface APODService {
 
         fun createService(): APODService {
             return Retrofit.Builder()
-                .baseUrl(BASEURL)
+                .baseUrl(BASE_URL)
                 .client(
                     OkHttpClient().newBuilder()
                         .addInterceptor(HttpLoggingInterceptor().apply {
                             level = if (BuildConfig.DEBUG)
                                 HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
                         })
-                        .build())
+                        .build()
+                )
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
                 .create(APODService::class.java)

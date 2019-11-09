@@ -8,36 +8,33 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.graphics.RectF
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.DecelerateInterpolator
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.android.material.snackbar.Snackbar
 import io.github.sfotakos.itos.data.entities.APOD
 import io.github.sfotakos.itos.data.repositories.db.ApodDb
 import io.github.sfotakos.itos.network.ConnectionLiveData
-
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
-import androidx.core.content.ContextCompat
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.CenterCrop
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import kotlinx.android.synthetic.main.item_apod.*
 import kotlin.math.roundToInt
 
 class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 
     private val adapter = ApodAdapter(this) { viewModel.retry() }
 
-    private lateinit var connectionLiveData : ConnectionLiveData
+    private lateinit var connectionLiveData: ConnectionLiveData
     private lateinit var viewModel: ApodViewModel
 
     private var currentAnimator: Animator? = null
@@ -92,7 +89,13 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
         apod_recyclerView.layoutManager = LinearLayoutManager(this)
         apod_recyclerView.adapter = adapter
         apod_recyclerView.addItemDecoration(
-            ApodItemDecoration(ContextCompat.getDrawable(this, io.github.sfotakos.itos.R.drawable.divider_apod)!!))
+            ApodItemDecoration(
+                ContextCompat.getDrawable(
+                    this,
+                    io.github.sfotakos.itos.R.drawable.divider_apod
+                )!!
+            )
+        )
 
         viewModel.apods.observe(this, Observer<PagedList<APOD>> {
             adapter.submitList(it)
@@ -118,9 +121,11 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
         // Load the high-resolution "zoomed-in" image.
         Glide.with(this)
             .load(imageUrl)
-            .transform(RoundedCorners(
-                    ScalingUtil.dpToPixel(this,8f).roundToInt()
-                ))
+            .transform(
+                RoundedCorners(
+                    ScalingUtil.dpToPixel(this, 8f).roundToInt()
+                )
+            )
             .into(apod_expanded_ImageView)
 
         // Calculate the starting and ending bounds for the zoomed-in image.
@@ -181,11 +186,19 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
             play(
                 ObjectAnimator.ofFloat(
                     apod_expanded_ImageView,
-                View.X,
-                startBounds.left,
-                finalBounds.left)
+                    View.X,
+                    startBounds.left,
+                    finalBounds.left
+                )
             ).apply {
-                with(ObjectAnimator.ofFloat(apod_expanded_ImageView, View.Y, startBounds.top, finalBounds.top))
+                with(
+                    ObjectAnimator.ofFloat(
+                        apod_expanded_ImageView,
+                        View.Y,
+                        startBounds.top,
+                        finalBounds.top
+                    )
+                )
                 with(ObjectAnimator.ofFloat(apod_expanded_ImageView, View.SCALE_X, startScale, 1f))
                 with(ObjectAnimator.ofFloat(apod_expanded_ImageView, View.SCALE_Y, startScale, 1f))
             }
@@ -213,7 +226,13 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
             // Animate the four positioning/sizing properties in parallel,
             // back to their original values.
             currentAnimator = AnimatorSet().apply {
-                play(ObjectAnimator.ofFloat(apod_expanded_ImageView, View.X, startBounds.left)).apply {
+                play(
+                    ObjectAnimator.ofFloat(
+                        apod_expanded_ImageView,
+                        View.X,
+                        startBounds.left
+                    )
+                ).apply {
                     with(ObjectAnimator.ofFloat(apod_expanded_ImageView, View.Y, startBounds.top))
                     with(ObjectAnimator.ofFloat(apod_expanded_ImageView, View.SCALE_X, startScale))
                     with(ObjectAnimator.ofFloat(apod_expanded_ImageView, View.SCALE_Y, startScale))

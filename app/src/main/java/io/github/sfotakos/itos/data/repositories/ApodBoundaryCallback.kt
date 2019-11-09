@@ -14,20 +14,20 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
 
-class ApodBoundaryCallback (private val db: ApodDb) :  PagedList.BoundaryCallback<APOD>() {
+class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<APOD>() {
 
     //TODO add multi thread executor
     val helper = PagingRequestHelper(Executors.newSingleThreadExecutor())
     val networkState = helper.createStatusLiveData()
 
     //TODO should this be here?
-    private val pageSize = 4
+    //private val pageSize = 4
 
     override fun onZeroItemsLoaded() {
         super.onZeroItemsLoaded()
         helper.runIfNotRunning(PagingRequestHelper.RequestType.INITIAL) {
             APODService.createService()
-                .getApodByDate("***REMOVED***", getDateString(Calendar.getInstance()))
+                .getTodayApod("***REMOVED***")
                 .enqueue(createWebserviceCallback(it))
         }
     }
@@ -38,17 +38,17 @@ class ApodBoundaryCallback (private val db: ApodDb) :  PagedList.BoundaryCallbac
         calendar.time =
             SimpleDateFormat(APODService.QUERY_DATE_FORMAT, Locale.ENGLISH)
                 .parse(itemAtEnd.date)
-            fetchApods(getPreviousDay(calendar))
+        fetchApods(getPreviousDay(calendar))
     }
 
     private fun fetchApods(calendar: Calendar = Calendar.getInstance()) {
         //TODO effectively only calls it once, because of runIfNotRunning
 //        for (i in 0..pageSize) {
-            helper.runIfNotRunning(PagingRequestHelper.RequestType.AFTER) {
-                APODService.createService()
-                    .getApodByDate("***REMOVED***", getDateString(calendar))
-                    .enqueue(createWebserviceCallback(it))
-            }
+        helper.runIfNotRunning(PagingRequestHelper.RequestType.AFTER) {
+            APODService.createService()
+                .getApodByDate("***REMOVED***", getDateString(calendar))
+                .enqueue(createWebserviceCallback(it))
+        }
 //        }
     }
 
@@ -57,7 +57,8 @@ class ApodBoundaryCallback (private val db: ApodDb) :  PagedList.BoundaryCallbac
         return object : Callback<APOD> {
             override fun onFailure(
                 call: Call<APOD>,
-                t: Throwable) {
+                t: Throwable
+            ) {
                 //TODO treat error to differ between network and parsing errors.
                 it.recordFailure(t)
             }
@@ -69,7 +70,7 @@ class ApodBoundaryCallback (private val db: ApodDb) :  PagedList.BoundaryCallbac
                 if (response.isSuccessful) {
                     val apod: APOD? = response.body()
                     if (apod != null) {
-                        Executors.newSingleThreadExecutor().execute{
+                        Executors.newSingleThreadExecutor().execute {
                             db.apodDao().insertApod(apod)
                             it.recordSuccess()
                         }
@@ -84,7 +85,7 @@ class ApodBoundaryCallback (private val db: ApodDb) :  PagedList.BoundaryCallbac
         }
     }
 
-    private fun recordFailure(it: PagingRequestHelper.Request.Callback, error: String){
+    private fun recordFailure(it: PagingRequestHelper.Request.Callback, error: String) {
         Log.d("ApodDataSource", error)
         it.recordFailure(Throwable(error))
     }

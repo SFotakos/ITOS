@@ -1,5 +1,6 @@
 package io.github.sfotakos.itos.presentation.ui
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
@@ -8,14 +9,16 @@ import androidx.paging.PagedList
 import io.github.sfotakos.itos.data.entities.APOD
 import io.github.sfotakos.itos.data.repositories.ApodBoundaryCallback
 import io.github.sfotakos.itos.data.repositories.db.ApodDb
+import io.github.sfotakos.itos.network.NetworkState
 import io.github.sfotakos.itos.network.ResponseWrapper
 
-class ApodViewModel(private val db: ApodDb) : ViewModel(){
+class ApodViewModel(private val db: ApodDb) : ViewModel() {
 
-    private val repoResult : MutableLiveData<ResponseWrapper<APOD>> = fetchApods()
+    private val repoResult: MutableLiveData<ResponseWrapper<APOD>> = fetchApods()
 
-    val apods = Transformations.switchMap(repoResult) { it.pagedList }
-    val networkState = Transformations.switchMap(repoResult) { it.networkState }
+    val apods: LiveData<PagedList<APOD>> = Transformations.switchMap(repoResult) { it.pagedList }
+    val networkState: LiveData<NetworkState> =
+        Transformations.switchMap(repoResult) { it.networkState }
 
     fun retry() {
         val listing = repoResult.value
@@ -31,12 +34,13 @@ class ApodViewModel(private val db: ApodDb) : ViewModel(){
             .build()
         val livePageListBuilder = LivePagedListBuilder<Int, APOD>(
             db.apodDao().queryAllApods(),
-            config)
+            config
+        )
         val boundaryCallback = ApodBoundaryCallback(db)
         livePageListBuilder.setBoundaryCallback(boundaryCallback)
 
-        val mutableLiveData : MutableLiveData<ResponseWrapper<APOD>> = MutableLiveData()
-        mutableLiveData.value =   ResponseWrapper(
+        val mutableLiveData: MutableLiveData<ResponseWrapper<APOD>> = MutableLiveData()
+        mutableLiveData.value = ResponseWrapper(
             pagedList = livePageListBuilder.build(),
             networkState = boundaryCallback.networkState,
             retry = {

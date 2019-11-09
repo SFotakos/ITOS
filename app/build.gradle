@@ -40,14 +40,15 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.6.1'
     implementation 'com.squareup.okhttp3:logging-interceptor:3.12.1'
 
-    implementation "androidx.navigation:navigation-fragment-ktx:2.0.0"
-    implementation "androidx.navigation:navigation-ui-ktx:2.0.0"
+    implementation "androidx.navigation:navigation-fragment-ktx:2.1.0"
+    implementation "androidx.navigation:navigation-ui-ktx:2.1.0"
 
     //LiveData and ViewModel
-    implementation "androidx.lifecycle:lifecycle-extensions:2.0.0"
+    implementation "androidx.lifecycle:lifecycle-extensions:2.1.0"
 
     //Rollback to previous version due to a bug in 2.0.0
     //https://issuetracker.google.com/issues/131586761
+    //noinspection GradleDependency
     implementation "android.arch.paging:runtime:1.0.0"
 
     implementation "com.airbnb.android:lottie:3.1.0"

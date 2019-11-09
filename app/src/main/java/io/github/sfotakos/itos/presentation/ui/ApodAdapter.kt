@@ -26,7 +26,10 @@ import kotlin.math.roundToInt
 
 //TODO proper error and APOD layout
 //TODO separate view holders from adapter
-class ApodAdapter(val listener: ApodAdapterListener, private val retryCallback: () -> Unit):
+class ApodAdapter(
+    private val listener: ApodAdapterListener,
+    private val retryCallback: () -> Unit
+) :
     PagedListAdapter<APOD, RecyclerView.ViewHolder>(ApodDiffUtilCallback()) {
 
     private var networkState: NetworkState? = null
@@ -35,12 +38,16 @@ class ApodAdapter(val listener: ApodAdapterListener, private val retryCallback: 
         return when (viewType) {
             //TODO justifiedText not working on lower API levels
             R.layout.item_apod -> {
-                ApodViewHolder(LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_apod, parent, false), listener)
+                ApodViewHolder(
+                    LayoutInflater.from(parent.context)
+                        .inflate(R.layout.item_apod, parent, false), listener
+                )
             }
             R.layout.network_state_item -> {
-                NetworkStateItemViewHolder(LayoutInflater.from(parent.context)
-                    .inflate(R.layout.network_state_item, parent, false), retryCallback)
+                NetworkStateItemViewHolder(
+                    LayoutInflater.from(parent.context)
+                        .inflate(R.layout.network_state_item, parent, false), retryCallback
+                )
             }
             else -> throw IllegalArgumentException("unknown view type $viewType")
         }
@@ -53,7 +60,9 @@ class ApodAdapter(val listener: ApodAdapterListener, private val retryCallback: 
                     (holder as ApodViewHolder).bind(it)
                 }
             }
-            R.layout.network_state_item -> (holder as NetworkStateItemViewHolder).bindTo(networkState)
+            R.layout.network_state_item -> (holder as NetworkStateItemViewHolder).bindTo(
+                networkState
+            )
         }
     }
 
@@ -87,7 +96,8 @@ class ApodAdapter(val listener: ApodAdapterListener, private val retryCallback: 
         }
     }
 
-    class ApodViewHolder(itemView: View, val listener: ApodAdapterListener) : RecyclerView.ViewHolder(itemView) {
+    class ApodViewHolder(itemView: View, private val listener: ApodAdapterListener) :
+        RecyclerView.ViewHolder(itemView) {
 
         private val requestListener = object : RequestListener<Drawable> {
             override fun onLoadFailed(
@@ -114,7 +124,7 @@ class ApodAdapter(val listener: ApodAdapterListener, private val retryCallback: 
             }
         }
 
-        fun bind (apod: APOD) {
+        fun bind(apod: APOD) {
             val context = itemView.context
             //TODO APOD API can return a video on occasion, as seen from 21/10
             itemView.apodPicture_imageView.visibility = View.INVISIBLE
@@ -126,13 +136,18 @@ class ApodAdapter(val listener: ApodAdapterListener, private val retryCallback: 
                 .load(apod.url)
                 .listener(requestListener)
                 .error(ContextCompat.getDrawable(context, R.drawable.ic_asteroid))
-                .transform(CenterCrop(), RoundedCorners(
-                    ScalingUtil.dpToPixel(context,8f).roundToInt()
-                ))
+                .transform(
+                    CenterCrop(), RoundedCorners(
+                        ScalingUtil.dpToPixel(context, 8f).roundToInt()
+                    )
+                )
                 .into(itemView.apodPicture_imageView)
             itemView.apodTitle_textView.text = apod.title
-            itemView.apodCopyright_textView.text = if(apod.copyright.isNullOrBlank()) {
-                context.getString(R.string.copyright_format, context.getString(R.string.public_domain))
+            itemView.apodCopyright_textView.text = if (apod.copyright.isNullOrBlank()) {
+                context.getString(
+                    R.string.copyright_format,
+                    context.getString(R.string.public_domain)
+                )
             } else {
                 context.getString(R.string.copyright_format, apod.copyright)
             }
@@ -141,17 +156,20 @@ class ApodAdapter(val listener: ApodAdapterListener, private val retryCallback: 
         }
     }
 
-    class NetworkStateItemViewHolder(view: View,
-                                     private val retryCallback: () -> Unit)
-        : RecyclerView.ViewHolder(view) {
+    class NetworkStateItemViewHolder(
+        view: View,
+        private val retryCallback: () -> Unit
+    ) : RecyclerView.ViewHolder(view) {
         private val progress = view.findViewById<LottieAnimationView>(R.id.progress)
         private val retry = view.findViewById<Button>(R.id.retry_button)
         private val errorMsg = view.findViewById<TextView>(R.id.error_msg)
+
         init {
             retry.setOnClickListener {
                 retryCallback()
             }
         }
+
         fun bindTo(networkState: NetworkState?) {
             progress.visibility = toVisibility(networkState?.status == Status.RUNNING)
             retry.visibility = toVisibility(networkState?.status == Status.FAILED)
@@ -160,7 +178,7 @@ class ApodAdapter(val listener: ApodAdapterListener, private val retryCallback: 
         }
 
         companion object {
-            fun toVisibility(constraint : Boolean): Int {
+            fun toVisibility(constraint: Boolean): Int {
                 return if (constraint) {
                     View.VISIBLE
                 } else {

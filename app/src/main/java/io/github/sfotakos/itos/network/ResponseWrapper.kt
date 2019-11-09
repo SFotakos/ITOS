@@ -9,4 +9,5 @@ data class ResponseWrapper<T>(
     // represents the network request status to show to the user
     val networkState: LiveData<NetworkState>,
     // retries any failed requests.
-    val retry: () -> Unit)
+    val retry: () -> Unit
+)

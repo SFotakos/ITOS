@@ -9,22 +9,4 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class App : Application() {
 
-    companion object {
-
-        var BASEURL = "https://api.nasa.gov/"
-
-        private val retrofit = Retrofit.Builder()
-            .baseUrl(BASEURL)
-            .client(
-                OkHttpClient().newBuilder()
-                    .addInterceptor(HttpLoggingInterceptor().apply {
-                        level = if (BuildConfig.DEBUG)
-                            HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
-                    })
-                .build())
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        val apodService: APODService = retrofit.create(APODService::class.java)
-    }
 }

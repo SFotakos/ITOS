@@ -15,7 +15,8 @@ import androidx.lifecycle.LiveData
 
 class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
 
-    private var connectivityManager: ConnectivityManager = context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+    private var connectivityManager: ConnectivityManager =
+        context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
 
     private lateinit var connectivityManagerCallback: ConnectivityManager.NetworkCallback
 
@@ -23,11 +24,16 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
         super.onActive()
         updateConnection()
         when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> connectivityManager.registerDefaultNetworkCallback(getConnectivityManagerCallback())
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> connectivityManager.registerDefaultNetworkCallback(
+                getConnectivityManagerCallback()
+            )
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> lollipopNetworkAvailableRequest()
             else -> {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                    context.registerReceiver(networkReceiver, IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"))
+                    context.registerReceiver(
+                        networkReceiver,
+                        IntentFilter("android.net.conn.CONNECTIVITY_CHANGE")
+                    )
                 }
             }
         }
@@ -47,7 +53,10 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
         val builder = NetworkRequest.Builder()
             .addTransportType(android.net.NetworkCapabilities.TRANSPORT_CELLULAR)
             .addTransportType(android.net.NetworkCapabilities.TRANSPORT_WIFI)
-        connectivityManager.registerNetworkCallback(builder.build(), getConnectivityManagerCallback())
+        connectivityManager.registerNetworkCallback(
+            builder.build(),
+            getConnectivityManagerCallback()
+        )
     }
 
     private fun getConnectivityManagerCallback(): ConnectivityManager.NetworkCallback {
