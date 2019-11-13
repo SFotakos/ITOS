@@ -31,9 +31,8 @@ class ExpandedImageActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         intent.extras?.let {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                expanded_ImageView.transitionName = it.getString(TRANSITION_NAME_ARG)
-            }
+            expanded_ImageView.transitionName = it.getString(TRANSITION_NAME_ARG)
+
             Glide.with(this)
                 .load(it.getString(APOD_URL_ARG))
                 .listener( object : RequestListener<Drawable> {
@@ -62,7 +61,6 @@ class ExpandedImageActivity : AppCompatActivity() {
                 .into(expanded_ImageView as ImageView)
         }
         closeDialog.setOnClickListener {
-            Log.d("Expanded", "click")
             super.onBackPressed()
         }
     }
