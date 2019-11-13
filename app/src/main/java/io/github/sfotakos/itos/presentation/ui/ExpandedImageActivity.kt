@@ -4,6 +4,8 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
@@ -57,9 +59,10 @@ class ExpandedImageActivity : AppCompatActivity() {
                     }
                 })
                 .error(ContextCompat.getDrawable(this, R.drawable.ic_asteroid))
-                .into(expanded_ImageView)
+                .into(expanded_ImageView as ImageView)
         }
         closeDialog.setOnClickListener {
+            Log.d("Expanded", "click")
             super.onBackPressed()
         }
     }
