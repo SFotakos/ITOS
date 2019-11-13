@@ -65,27 +65,11 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
         })
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(io.github.sfotakos.itos.R.menu.menu_home, menu)
-        return true
-    }
-
-
-    //TODO info about the app
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            io.github.sfotakos.itos.R.id.action_home_menu_info -> {
-                Snackbar.make(this.toolbar, "Placeholder Info", Snackbar.LENGTH_LONG).show()
-                //TODO add attributions here
-                //https://www.flaticon.com/free-icon/asteroid_2229768
-                //https://www.fontspace.com/c%C3%A9-al/space-galaxy
-                //https://www.fontspace.com/heaven-castro/izayoi-monospaced
-                //https://www.flaticon.com/free-icon/galaxy_124567
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
+    //TODO add attributions to onOptionsItemSelected
+    //https://www.flaticon.com/free-icon/asteroid_2229768
+    //https://www.fontspace.com/c%C3%A9-al/space-galaxy
+    //https://www.fontspace.com/heaven-castro/izayoi-monospaced
+    //https://www.flaticon.com/free-icon/galaxy_124567
 
     private fun initializeList() {
         apod_recyclerView.layoutManager = LinearLayoutManager(this)
