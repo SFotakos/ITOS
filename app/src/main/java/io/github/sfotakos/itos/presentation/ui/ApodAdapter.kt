@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.lottie.LottieAnimationView
@@ -129,6 +130,7 @@ class ApodAdapter(
             //TODO APOD API can return a video on occasion, as seen from 21/10
             itemView.apodPicture_imageView.visibility = View.INVISIBLE
             itemView.apodPicture_imageView.setOnClickListener {
+                ViewCompat.setTransitionName(itemView.apodPicture_imageView, apod.date)
                 listener.zoomImageFromThumb(itemView.apodPicture_imageView, apod.url)
             }
             itemView.imageLoading.visibility = View.VISIBLE
