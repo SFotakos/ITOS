@@ -19,6 +19,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.util.Log
+import android.widget.Toast
+import com.google.android.material.snackbar.Snackbar
 import io.github.sfotakos.itos.R
 
 class ExpandedImageActivity : AppCompatActivity() {
@@ -87,11 +89,11 @@ class ExpandedImageActivity : AppCompatActivity() {
         closeDialog.setOnClickListener {
             super.onBackPressed()
         }
-
     }
 
     fun saveImageToGallery(bitmap: Bitmap, title: String, description: String) {
-        MediaStore.Images.Media.insertImage(contentResolver,bitmap, title, description)
+        MediaStore.Images.Media.insertImage(contentResolver, bitmap, title, description)
+        Snackbar.make(saveImage, "Image Saved Successfully", Snackbar.LENGTH_LONG).show()
     }
 
     override fun onRequestPermissionsResult(
