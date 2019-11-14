@@ -8,9 +8,10 @@
         android:background="@android:color/black">
 
     <ImageView
-            android:id="@+id/closeDialog"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
+            android:id="@+id/closeDialog"
+            android:layout_gravity="start|top"
             android:layout_margin="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -18,11 +19,31 @@
 
     <com.ortiz.touchview.TouchImageView
             app:layout_constraintTop_toBottomOf="@id/closeDialog"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/actions"
             android:id="@+id/expanded_ImageView"
+            android:scaleType="fitCenter"
             android:layout_width="wrap_content"
-            android:layout_height="0dp"/>
+            android:layout_height="wrap_content"/>
+
+    <LinearLayout
+            android:id="@+id/actions"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:orientation="horizontal">
+
+        <ImageButton
+                android:id="@+id/saveImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@android:drawable/ic_menu_save"
+                android:background="@null"/>
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
