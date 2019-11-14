@@ -13,6 +13,6 @@ class ApodDiffUtilCallback : DiffUtil.ItemCallback<APOD>() {
                 && oldItem.explanation == newItem.explanation
                 && oldItem.hdurl == newItem.hdurl
                 && oldItem.copyright == newItem.copyright
-                && oldItem.service_version == newItem.service_version
+                && oldItem.serviceVersion == newItem.serviceVersion
     }
 }
