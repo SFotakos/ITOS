@@ -25,10 +25,18 @@ class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<
 
     override fun onZeroItemsLoaded() {
         super.onZeroItemsLoaded()
-        helper.runIfNotRunning(PagingRequestHelper.RequestType.INITIAL) {
-            APODService.createService()
-                .getTodayApod("***REMOVED***")
-                .enqueue(createWebserviceCallback(it))
+        fetchApods(Calendar.getInstance(), PagingRequestHelper.RequestType.INITIAL)
+    }
+
+    override fun onItemAtFrontLoaded(itemAtFront: APOD) {
+        super.onItemAtFrontLoaded(itemAtFront)
+        val calendar = Calendar.getInstance()
+        calendar.time =
+            SimpleDateFormat(APODService.QUERY_DATE_FORMAT, Locale.ENGLISH)
+                .parse(itemAtFront.date)
+        getNextDay(calendar)
+        if (calendar.compareTo(Calendar.getInstance()) < 0) {
+            fetchApods(calendar, PagingRequestHelper.RequestType.BEFORE)
         }
     }
 
@@ -38,13 +46,13 @@ class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<
         calendar.time =
             SimpleDateFormat(APODService.QUERY_DATE_FORMAT, Locale.ENGLISH)
                 .parse(itemAtEnd.date)
-        fetchApods(getPreviousDay(calendar))
+        fetchApods(getPreviousDay(calendar), PagingRequestHelper.RequestType.AFTER)
     }
 
-    private fun fetchApods(calendar: Calendar = Calendar.getInstance()) {
+    private fun fetchApods(calendar: Calendar, requestType: PagingRequestHelper.RequestType) {
         //TODO effectively only calls it once, because of runIfNotRunning
 //        for (i in 0..pageSize) {
-        helper.runIfNotRunning(PagingRequestHelper.RequestType.AFTER) {
+        helper.runIfNotRunning(requestType) {
             APODService.createService()
                 .getApodByDate("***REMOVED***", getDateString(calendar))
                 .enqueue(createWebserviceCallback(it))
@@ -74,6 +82,7 @@ class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<
                             db.apodDao().insertApod(apod)
                             it.recordSuccess()
                         }
+
                     } else {
                         recordFailure(it, "APOD must not be null")
                     }
@@ -92,6 +101,11 @@ class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<
 
     private fun getPreviousDay(calendar: Calendar): Calendar {
         calendar.add(Calendar.DATE, -1)
+        return calendar
+    }
+
+    private fun getNextDay(calendar: Calendar): Calendar {
+        calendar.add(Calendar.DATE, 1)
         return calendar
     }
 

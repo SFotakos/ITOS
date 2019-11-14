@@ -12,6 +12,6 @@ interface ApodDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertApod(posts: APOD)
 
-    @Query("SELECT * FROM APOD")
+    @Query("SELECT * FROM APOD ORDER BY DATE DESC")
     fun queryAllApods(): DataSource.Factory<Int, APOD>
 }
