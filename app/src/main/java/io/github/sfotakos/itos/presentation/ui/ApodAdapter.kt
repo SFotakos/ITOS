@@ -15,6 +15,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.FitCenter
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
@@ -139,7 +140,7 @@ class ApodAdapter(
                 .listener(requestListener)
                 .error(ContextCompat.getDrawable(context, R.drawable.ic_asteroid))
                 .transform(
-                    CenterCrop(), RoundedCorners(
+                    FitCenter(), RoundedCorners(
                         ScalingUtil.dpToPixel(context, 8f).roundToInt()
                     )
                 )
