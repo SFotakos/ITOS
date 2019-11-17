@@ -19,8 +19,8 @@
 
     <ImageView
             android:id="@+id/closeDialog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:layout_margin="16dp"
             android:src="@drawable/ic_close_white_24dp"
             android:tint="@android:color/white"
