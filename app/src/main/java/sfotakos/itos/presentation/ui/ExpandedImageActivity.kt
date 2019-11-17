@@ -1,6 +1,7 @@
 package sfotakos.itos.presentation.ui
 
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.animation.Animator
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -18,6 +19,9 @@ import kotlinx.android.synthetic.main.activity_expanded_image.*
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
+import android.view.View
+import android.view.animation.Animation
+import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
 import sfotakos.itos.R
 
@@ -29,7 +33,7 @@ class ExpandedImageActivity : AppCompatActivity() {
         const val REQUEST_WRITE_STORAGE_REQUEST_CODE = 1234
     }
 
-    lateinit var requestPermissionCallback : () -> Unit
+    lateinit var requestPermissionCallback: () -> Unit
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +47,7 @@ class ExpandedImageActivity : AppCompatActivity() {
 
             Glide.with(this)
                 .load(it.getString(APOD_URL_ARG))
-                .listener( object : RequestListener<Drawable> {
+                .listener(object : RequestListener<Drawable> {
                     override fun onLoadFailed(
                         e: GlideException?,
                         model: Any?,
@@ -64,7 +68,33 @@ class ExpandedImageActivity : AppCompatActivity() {
                         supportStartPostponedEnterTransition()
                         resource?.let { drawable ->
                             requestPermissionCallback = {
-                                saveImageToGallery(
+                                var imagePath: String? = null
+                                saveImage.addAnimatorListener(object : Animator.AnimatorListener {
+                                    override fun onAnimationRepeat(animation: Animator?) {
+                                        saveImage.cancelAnimation()
+                                        if (imagePath == null) {
+                                            Toast.makeText(
+                                                this@ExpandedImageActivity,
+                                                "Error saving image, please try again",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
+
+                                    override fun onAnimationStart(animation: Animator?) {
+                                        //unused
+                                    }
+
+                                    override fun onAnimationEnd(animation: Animator?) {
+                                        //unused
+                                    }
+
+                                    override fun onAnimationCancel(animation: Animator?) {
+                                        //unused
+                                    }
+                                })
+                                saveImage.playAnimation()
+                                imagePath = saveImageToGallery(
                                     drawableToBitmap(drawable),
                                     "tempTitle",
                                     "tempDescr"
@@ -89,9 +119,8 @@ class ExpandedImageActivity : AppCompatActivity() {
         }
     }
 
-    fun saveImageToGallery(bitmap: Bitmap, title: String, description: String) {
-        MediaStore.Images.Media.insertImage(contentResolver, bitmap, title, description)
-        Snackbar.make(saveImage, "Image Saved Successfully", Snackbar.LENGTH_LONG).show()
+    fun saveImageToGallery(bitmap: Bitmap, title: String, description: String): String {
+        return MediaStore.Images.Media.insertImage(contentResolver, bitmap, title, description)
     }
 
     override fun onRequestPermissionsResult(
@@ -120,7 +149,8 @@ class ExpandedImageActivity : AppCompatActivity() {
 
     private fun hasWritePermissions(): Boolean {
         return ContextCompat.checkSelfPermission(
-            baseContext, WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            baseContext, WRITE_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     fun drawableToBitmap(drawable: Drawable): Bitmap {
