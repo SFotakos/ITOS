@@ -17,20 +17,18 @@ import com.airbnb.lottie.LottieAnimationView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
-import com.bumptech.glide.load.resource.bitmap.FitCenter
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
+import kotlinx.android.synthetic.main.item_apod.view.*
 import sfotakos.itos.R
 import sfotakos.itos.data.entities.APOD
 import sfotakos.itos.data.entities.MediaType
 import sfotakos.itos.network.NetworkState
 import sfotakos.itos.network.Status
-import kotlinx.android.synthetic.main.item_apod.view.*
-import java.lang.IllegalStateException
 import kotlin.math.roundToInt
 
-//TODO proper error and APOD layout
+//TODO proper error layout
 //TODO separate view holders from adapter
 class ApodAdapter(
     private val listener: ApodAdapterListener,
@@ -134,33 +132,44 @@ class ApodAdapter(
             val context = itemView.context
             itemView.apodPicture_imageView.visibility = View.INVISIBLE
             itemView.imageLoading.visibility = View.VISIBLE
-            if (apod.mediaType == MediaType.IMAGE.mediaTypeValue) {
-                Glide.with(context)
-                    .load(apod.url)
-                    .listener(requestListener)
-                    .error(ContextCompat.getDrawable(context, R.drawable.ic_asteroid))
-                    .transform(
-                        RoundedCorners(
-                            ScalingUtil.dpToPixel(context, 8f).roundToInt()
-                        )
-                    )
-                    .into(itemView.apodPicture_imageView)
 
-                itemView.apodPicture_imageView.setOnClickListener {
-                    ViewCompat.setTransitionName(itemView.apodPicture_imageView, apod.date)
-                    listener.zoomImageFromThumb(itemView.apodPicture_imageView, apod.url)
+            when {
+                apod.mediaType == MediaType.IMAGE.mediaTypeValue -> {
+                    itemView.apodPicture_imageView.adjustViewBounds = true
+                    itemView.apodPicture_imageView.minimumHeight = 0
+                    itemView.apodPicture_imageView.minimumWidth = 0
+                    Glide.with(context)
+                        .load(apod.url)
+                        .listener(requestListener)
+                        .error(ContextCompat.getDrawable(context, R.drawable.ic_asteroid))
+                        .transform(
+                            RoundedCorners(
+                                ScalingUtil.dpToPixel(context, 8f).roundToInt()
+                            )
+                        )
+                        .into(itemView.apodPicture_imageView)
+
+                    itemView.apodPicture_imageView.setOnClickListener {
+                        ViewCompat.setTransitionName(itemView.apodPicture_imageView, apod.date)
+                        listener.zoomImageFromThumb(itemView.apodPicture_imageView, apod.url)
+                    }
                 }
-            } else if (apod.mediaType == MediaType.VIDEO.mediaTypeValue) {
-                itemView.apodPicture_imageView.setImageDrawable(
-                    ContextCompat.getDrawable(context, android.R.drawable.ic_media_play)
-                )
-                itemView.apodPicture_imageView.setOnClickListener {
-                    context.startActivity(Intent(ACTION_VIEW, Uri.parse(apod.url)))
+                apod.mediaType == MediaType.VIDEO.mediaTypeValue -> {
+                    itemView.apodPicture_imageView.adjustViewBounds = false
+                    itemView.apodPicture_imageView.minimumHeight =
+                        ScalingUtil.dpToPixel(context, 96f).roundToInt()
+                    itemView.apodPicture_imageView.minimumWidth =
+                        ScalingUtil.dpToPixel(context, 96f).roundToInt()
+                    itemView.apodPicture_imageView.setImageDrawable(
+                        ContextCompat.getDrawable(context, R.drawable.ic_play_white_24dp)
+                    )
+                    itemView.apodPicture_imageView.setOnClickListener {
+                        context.startActivity(Intent(ACTION_VIEW, Uri.parse(apod.url)))
+                    }
+                    itemView.apodPicture_imageView.visibility = View.VISIBLE
+                    itemView.imageLoading.visibility = View.GONE
                 }
-                itemView.apodPicture_imageView.visibility = View.VISIBLE
-                itemView.imageLoading.visibility = View.GONE
-            } else {
-                throw IllegalStateException()
+                else -> throw IllegalStateException()
             }
             itemView.apodTitle_textView.text = apod.title
             itemView.apodCopyright_textView.text = if (apod.copyright.isNullOrBlank()) {
