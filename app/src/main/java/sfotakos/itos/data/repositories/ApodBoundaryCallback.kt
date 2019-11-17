@@ -17,12 +17,14 @@ import java.util.concurrent.Executors
 
 class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<APOD>() {
 
+    companion object {
+        const val YESTERDAY = -1
+        const val TOMORROW = 1
+    }
+
     //TODO add multi thread executor
     val helper = PagingRequestHelper(Executors.newSingleThreadExecutor())
     val networkState = helper.createStatusLiveData()
-
-    //TODO should this be here?
-    //private val pageSize = 4
 
     override fun onZeroItemsLoaded() {
         super.onZeroItemsLoaded()
@@ -36,7 +38,7 @@ class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<
             SimpleDateFormat(APODService.QUERY_DATE_FORMAT, Locale.ENGLISH)
                 .parse(itemAtFront.date)
         getNextDay(calendar)
-        if (calendar.compareTo(Calendar.getInstance()) < 0) {
+        if (calendar < Calendar.getInstance()) {
             fetchApods(calendar, PagingRequestHelper.RequestType.BEFORE)
         }
     }
@@ -51,14 +53,11 @@ class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<
     }
 
     private fun fetchApods(calendar: Calendar, requestType: PagingRequestHelper.RequestType) {
-        //TODO effectively only calls it once, because of runIfNotRunning
-//        for (i in 0..pageSize) {
         helper.runIfNotRunning(requestType) {
             APODService.createService()
                 .getApodByDate(BuildConfig.NASA_KEY, getDateString(calendar))
                 .enqueue(createWebserviceCallback(it))
         }
-//        }
     }
 
     private fun createWebserviceCallback(it: PagingRequestHelper.Request.Callback)
@@ -100,12 +99,12 @@ class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<
     }
 
     private fun getPreviousDay(calendar: Calendar): Calendar {
-        calendar.add(Calendar.DATE, -1)
+        calendar.add(Calendar.DATE, YESTERDAY)
         return calendar
     }
 
     private fun getNextDay(calendar: Calendar): Calendar {
-        calendar.add(Calendar.DATE, 1)
+        calendar.add(Calendar.DATE, TOMORROW)
         return calendar
     }
 
