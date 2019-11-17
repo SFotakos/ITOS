@@ -96,7 +96,6 @@ class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<
     }
 
     private fun recordFailure(it: PagingRequestHelper.Request.Callback, error: String) {
-        Log.d("ApodDataSource", error)
         it.recordFailure(Throwable(error))
     }
 
