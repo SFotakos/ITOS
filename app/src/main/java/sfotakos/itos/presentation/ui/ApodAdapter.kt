@@ -27,6 +27,7 @@ import sfotakos.itos.data.entities.MediaType
 import sfotakos.itos.network.NetworkState
 import sfotakos.itos.network.Status
 import kotlinx.android.synthetic.main.item_apod.view.*
+import java.lang.IllegalStateException
 import kotlin.math.roundToInt
 
 //TODO proper error and APOD layout
@@ -131,7 +132,6 @@ class ApodAdapter(
 
         fun bind(apod: APOD) {
             val context = itemView.context
-            //TODO APOD API can return a video on occasion, as seen from 21/10
             itemView.apodPicture_imageView.visibility = View.INVISIBLE
             itemView.imageLoading.visibility = View.VISIBLE
             if (apod.mediaType == MediaType.IMAGE.mediaTypeValue) {
@@ -140,7 +140,7 @@ class ApodAdapter(
                     .listener(requestListener)
                     .error(ContextCompat.getDrawable(context, R.drawable.ic_asteroid))
                     .transform(
-                        FitCenter(), RoundedCorners(
+                        RoundedCorners(
                             ScalingUtil.dpToPixel(context, 8f).roundToInt()
                         )
                     )
@@ -150,14 +150,17 @@ class ApodAdapter(
                     ViewCompat.setTransitionName(itemView.apodPicture_imageView, apod.date)
                     listener.zoomImageFromThumb(itemView.apodPicture_imageView, apod.url)
                 }
-            } else {
+            } else if (apod.mediaType == MediaType.VIDEO.mediaTypeValue) {
                 itemView.apodPicture_imageView.setImageDrawable(
-                    ContextCompat.getDrawable(context, android.R.drawable.ic_media_play))
+                    ContextCompat.getDrawable(context, android.R.drawable.ic_media_play)
+                )
                 itemView.apodPicture_imageView.setOnClickListener {
                     context.startActivity(Intent(ACTION_VIEW, Uri.parse(apod.url)))
                 }
                 itemView.apodPicture_imageView.visibility = View.VISIBLE
                 itemView.imageLoading.visibility = View.GONE
+            } else {
+                throw IllegalStateException()
             }
             itemView.apodTitle_textView.text = apod.title
             itemView.apodCopyright_textView.text = if (apod.copyright.isNullOrBlank()) {
