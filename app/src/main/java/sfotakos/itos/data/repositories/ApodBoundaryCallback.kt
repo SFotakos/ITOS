@@ -10,6 +10,7 @@ import sfotakos.itos.network.createStatusLiveData
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import sfotakos.itos.BuildConfig
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
@@ -54,7 +55,7 @@ class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<
 //        for (i in 0..pageSize) {
         helper.runIfNotRunning(requestType) {
             APODService.createService()
-                .getApodByDate("***REMOVED***", getDateString(calendar))
+                .getApodByDate(BuildConfig.NASA_KEY, getDateString(calendar))
                 .enqueue(createWebserviceCallback(it))
         }
 //        }

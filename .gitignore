@@ -72,3 +72,5 @@ fastlane/readme.md
 # mac files
 .DS_Store
 gradle/.DS_Store
+
+apikey.properties
