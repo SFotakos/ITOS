@@ -43,6 +43,7 @@ class ApodAdapter(
 
     companion object {
         const val ICON_MIN_SIZE = 96f
+        const val LOADING_MIN_SIZE = 144f
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -129,6 +130,8 @@ class ApodAdapter(
                 dataSource: DataSource?,
                 isFirstResource: Boolean
             ): Boolean {
+                itemView.apodPicture_imageView.minimumHeight = 0
+                itemView.apodPicture_imageView.minimumWidth = 0
                 itemView.apodPicture_imageView.visibility = View.VISIBLE
                 itemView.imageLoading.visibility = View.GONE
                 return false
@@ -143,8 +146,10 @@ class ApodAdapter(
             when {
                 apod.mediaType == MediaType.IMAGE.mediaTypeValue -> {
                     itemView.apodPicture_imageView.adjustViewBounds = true
-                    itemView.apodPicture_imageView.minimumHeight = 0
-                    itemView.apodPicture_imageView.minimumWidth = 0
+                    itemView.apodPicture_imageView.minimumHeight =
+                        ScalingUtil.dpToPixel(context, LOADING_MIN_SIZE).roundToInt()
+                    itemView.apodPicture_imageView.minimumWidth =
+                        ScalingUtil.dpToPixel(context, LOADING_MIN_SIZE).roundToInt()
                     val layoutParams = itemView.apodPicture_imageView.layoutParams
                     layoutParams.width = MATCH_PARENT
                     itemView.apodPicture_imageView.layoutParams = layoutParams
