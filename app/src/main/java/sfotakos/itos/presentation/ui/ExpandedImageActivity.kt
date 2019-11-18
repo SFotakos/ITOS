@@ -2,6 +2,7 @@ package sfotakos.itos.presentation.ui
 
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.animation.Animator
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -19,6 +20,7 @@ import kotlinx.android.synthetic.main.activity_expanded_image.*
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
 import android.view.View
 import android.view.animation.Animation
 import android.widget.Toast
@@ -30,10 +32,12 @@ class ExpandedImageActivity : AppCompatActivity() {
     companion object {
         const val TRANSITION_NAME_ARG = "TransitionNameArgument"
         const val APOD_URL_ARG = "ApodUrl"
-        const val REQUEST_WRITE_STORAGE_REQUEST_CODE = 1234
+        const val REQUEST_WRITE_STORAGE_REQUEST_CODE_SAVE = 7891
+        const val REQUEST_WRITE_STORAGE_REQUEST_CODE_SHARE = 7892
     }
 
     lateinit var requestPermissionCallback: () -> Unit
+    lateinit var shareImageCallback: () -> Unit
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,12 +104,39 @@ class ExpandedImageActivity : AppCompatActivity() {
                                     "tempDescr"
                                 )
                             }
+                            shareImageCallback = {
+                                val imagePath = saveImageToGallery(
+                                    drawableToBitmap(drawable),
+                                    "tempTitle",
+                                    "tempDescr"
+                                )
+                                if (imagePath != null) {
+                                    val shareIntent = Intent(Intent.ACTION_SEND)
+                                    shareIntent.type = "image/jpg"
+                                    shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(imagePath))
+                                    shareIntent.putExtra(Intent.EXTRA_TEXT, "Basic APOD sharing!")
+                                    startActivity(Intent.createChooser(shareIntent, "Share image using"))
+                                } else {
+                                    Toast.makeText(
+                                        this@ExpandedImageActivity,
+                                        "Error saving image, please try again",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
                         }
                         saveImage.setOnClickListener {
                             if (hasWritePermissions()) {
                                 requestPermissionCallback.invoke()
                             } else {
-                                requestWritePermission()
+                                requestWritePermission(REQUEST_WRITE_STORAGE_REQUEST_CODE_SAVE)
+                            }
+                        }
+                        shareApod.setOnClickListener {
+                            if (hasWritePermissions()) {
+                                shareImageCallback.invoke()
+                            } else {
+                                requestWritePermission(REQUEST_WRITE_STORAGE_REQUEST_CODE_SHARE)
                             }
                         }
                         return false
@@ -119,7 +150,7 @@ class ExpandedImageActivity : AppCompatActivity() {
         }
     }
 
-    fun saveImageToGallery(bitmap: Bitmap, title: String, description: String): String {
+    fun saveImageToGallery(bitmap: Bitmap, title: String, description: String): String? {
         return MediaStore.Images.Media.insertImage(contentResolver, bitmap, title, description)
     }
 
@@ -128,22 +159,26 @@ class ExpandedImageActivity : AppCompatActivity() {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-        if (requestCode == REQUEST_WRITE_STORAGE_REQUEST_CODE) {
+        if (requestCode == REQUEST_WRITE_STORAGE_REQUEST_CODE_SAVE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 requestPermissionCallback.invoke()
+            }
+        } else if (requestCode == REQUEST_WRITE_STORAGE_REQUEST_CODE_SHARE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                shareImageCallback.invoke()
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
     }
 
-    private fun requestWritePermission() {
+    private fun requestWritePermission(requestCode: Int) {
         if (hasWritePermissions()) {
             return
         }
 
         ActivityCompat.requestPermissions(
-            this, arrayOf(WRITE_EXTERNAL_STORAGE), REQUEST_WRITE_STORAGE_REQUEST_CODE
+            this, arrayOf(WRITE_EXTERNAL_STORAGE), requestCode
         )
     }
 
