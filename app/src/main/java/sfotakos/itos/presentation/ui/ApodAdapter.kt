@@ -7,8 +7,11 @@ import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Button
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.paging.PagedListAdapter
@@ -37,6 +40,10 @@ class ApodAdapter(
     PagedListAdapter<APOD, RecyclerView.ViewHolder>(ApodDiffUtilCallback()) {
 
     private var networkState: NetworkState? = null
+
+    companion object {
+        const val ICON_MIN_SIZE = 96f
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
@@ -138,6 +145,9 @@ class ApodAdapter(
                     itemView.apodPicture_imageView.adjustViewBounds = true
                     itemView.apodPicture_imageView.minimumHeight = 0
                     itemView.apodPicture_imageView.minimumWidth = 0
+                    val layoutParams = itemView.apodPicture_imageView.layoutParams
+                    layoutParams.width = MATCH_PARENT
+                    itemView.apodPicture_imageView.layoutParams = layoutParams
                     Glide.with(context)
                         .load(apod.url)
                         .listener(requestListener)
@@ -157,9 +167,11 @@ class ApodAdapter(
                 apod.mediaType == MediaType.VIDEO.mediaTypeValue -> {
                     itemView.apodPicture_imageView.adjustViewBounds = false
                     itemView.apodPicture_imageView.minimumHeight =
-                        ScalingUtil.dpToPixel(context, 96f).roundToInt()
+                        ScalingUtil.dpToPixel(context, ICON_MIN_SIZE).roundToInt()
                     itemView.apodPicture_imageView.minimumWidth =
-                        ScalingUtil.dpToPixel(context, 96f).roundToInt()
+                        ScalingUtil.dpToPixel(context, ICON_MIN_SIZE).roundToInt()
+                    val layoutParams = itemView.apodPicture_imageView.layoutParams
+                    layoutParams.width = WRAP_CONTENT
                     itemView.apodPicture_imageView.setImageDrawable(
                         ContextCompat.getDrawable(context, R.drawable.ic_play_white_24dp)
                     )
