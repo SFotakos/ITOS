@@ -27,8 +27,12 @@ object FileUtils {
         return file
     }
 
+    fun checkIfFileExists(file: File) : Boolean {
+        return file.exists()
+    }
+
     fun generateImagePath(title: String, date: String): File {
-        return File(getImagesDirectory(), title + "_" + date + ".jpg")
+        return File(getImagesDirectory(), "$title $date.jpg")
     }
 
     fun compressAndSaveImage(file: File, bitmap: Bitmap): Boolean {

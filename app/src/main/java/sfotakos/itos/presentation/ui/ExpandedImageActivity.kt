@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.provider.MediaStore
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -21,27 +20,105 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
-import android.view.View
-import android.view.animation.Animation
 import android.widget.Toast
-import com.google.android.material.snackbar.Snackbar
 import sfotakos.itos.R
 import sfotakos.itos.data.FileUtils.addImageToGallery
+import sfotakos.itos.data.FileUtils.checkIfFileExists
 import sfotakos.itos.data.FileUtils.compressAndSaveImage
 import sfotakos.itos.data.FileUtils.generateImagePath
+import sfotakos.itos.data.entities.APOD
 import java.io.File
 
 class ExpandedImageActivity : AppCompatActivity() {
 
     companion object {
-        const val TRANSITION_NAME_ARG = "TransitionNameArgument"
-        const val APOD_URL_ARG = "ApodUrl"
+        const val APOD_IMAGE_TRANSITION_NAME = "ApodImageTransition"
+        const val APOD_ARG = "ApodArgument"
         const val REQUEST_WRITE_STORAGE_REQUEST_CODE_SAVE = 7891
         const val REQUEST_WRITE_STORAGE_REQUEST_CODE_SHARE = 7892
     }
 
     lateinit var requestPermissionCallback: () -> Unit
     lateinit var shareImageCallback: () -> Unit
+    lateinit var apod : APOD
+
+    private val requestListener = object : RequestListener<Drawable> {
+        override fun onLoadFailed(e: GlideException?, model: Any?, target: Target<Drawable>?,
+            isFirstResource: Boolean): Boolean {
+            //TODO log error maybe retry
+            supportStartPostponedEnterTransition()
+            return false
+        }
+
+        override fun onResourceReady(resource: Drawable?, model: Any?, target: Target<Drawable>?,
+            dataSource: DataSource?, isFirstResource: Boolean): Boolean {
+
+            supportStartPostponedEnterTransition()
+            resource?.let { drawable ->
+                requestPermissionCallback = {
+                    var imagePath: Uri? = null
+                    saveImage.addAnimatorListener(object : Animator.AnimatorListener {
+                        override fun onAnimationRepeat(animation: Animator?) {
+                            saveImage.cancelAnimation()
+                            if (imagePath == null) {
+                                Toast.makeText(
+                                    this@ExpandedImageActivity,
+                                    "Error saving image, please try again",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                        override fun onAnimationStart(animation: Animator?) {/*unused*/}
+                        override fun onAnimationEnd(animation: Animator?) {/*unused*/}
+                        override fun onAnimationCancel(animation: Animator?) {/*unused*/}
+                    })
+                    saveImage.playAnimation()
+                    imagePath = saveImageToGallery(
+                        drawableToBitmap(drawable),
+                        apod.title,
+                        apod.explanation,
+                        apod.date
+                    )
+                }
+                shareImageCallback = {
+                    val imagePath = saveImageToGallery(
+                        drawableToBitmap(drawable),
+                        apod.title,
+                        apod.explanation,
+                        apod.date
+                    )
+                    if (imagePath != null) {
+                        val shareIntent = Intent(Intent.ACTION_SEND)
+                        shareIntent.type = "image/jpg"
+                        shareIntent.putExtra(Intent.EXTRA_STREAM, imagePath)
+                        shareIntent.putExtra(Intent.EXTRA_TEXT, apod.title + " captured by " + apod.copyright + " on " + apod.date)
+                        startActivity(Intent.createChooser(shareIntent, "Share with..."))
+                    } else {
+                        Toast.makeText(
+                            this@ExpandedImageActivity,
+                            "Error sharing image, please try again",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+            saveImage.setOnClickListener {
+                if (hasWritePermissions()) {
+                    requestPermissionCallback.invoke()
+                } else {
+                    requestWritePermission(REQUEST_WRITE_STORAGE_REQUEST_CODE_SAVE)
+                }
+            }
+            shareApod.setOnClickListener {
+                if (hasWritePermissions()) {
+                    shareImageCallback.invoke()
+                } else {
+                    requestWritePermission(REQUEST_WRITE_STORAGE_REQUEST_CODE_SHARE)
+                }
+            }
+            return false
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,117 +127,35 @@ class ExpandedImageActivity : AppCompatActivity() {
         supportPostponeEnterTransition()
         supportActionBar?.hide()
 
-        intent.extras?.let {
-            expanded_ImageView.transitionName = it.getString(TRANSITION_NAME_ARG)
+        val extras = intent.extras
+        check(extras != null)
 
-            Glide.with(this)
-                .load(it.getString(APOD_URL_ARG))
-                .listener(object : RequestListener<Drawable> {
-                    override fun onLoadFailed(
-                        e: GlideException?,
-                        model: Any?,
-                        target: Target<Drawable>?,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        supportStartPostponedEnterTransition()
-                        return false
-                    }
+        val pictureTransitionName = extras.getString(APOD_IMAGE_TRANSITION_NAME)
+        apod = extras.getSerializable(APOD_ARG) as APOD
+        check(pictureTransitionName != null)
 
-                    override fun onResourceReady(
-                        resource: Drawable?,
-                        model: Any?,
-                        target: Target<Drawable>?,
-                        dataSource: DataSource?,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        supportStartPostponedEnterTransition()
-                        resource?.let { drawable ->
-                            requestPermissionCallback = {
-                                var imagePath: String? = null
-                                saveImage.addAnimatorListener(object : Animator.AnimatorListener {
-                                    override fun onAnimationRepeat(animation: Animator?) {
-                                        saveImage.cancelAnimation()
-                                        if (imagePath == null) {
-                                            Toast.makeText(
-                                                this@ExpandedImageActivity,
-                                                "Error saving image, please try again",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                    }
+        expanded_ImageView.transitionName = pictureTransitionName
 
-                                    override fun onAnimationStart(animation: Animator?) {
-                                        //unused
-                                    }
+        Glide.with(this)
+            .load(apod.url)
+            .listener(requestListener)
+            .error(ContextCompat.getDrawable(this, R.drawable.ic_asteroid))
+            .into(expanded_ImageView as ImageView)
 
-                                    override fun onAnimationEnd(animation: Animator?) {
-                                        //unused
-                                    }
-
-                                    override fun onAnimationCancel(animation: Animator?) {
-                                        //unused
-                                    }
-                                })
-                                saveImage.playAnimation()
-                                imagePath = saveImageToGallery(
-                                    drawableToBitmap(drawable),
-                                    "tempTitle",
-                                    "tempDescr"
-                                )
-                            }
-                            shareImageCallback = {
-                                val imagePath = saveImageToGallery(
-                                    drawableToBitmap(drawable),
-                                    "tempTitle",
-                                    "tempDescr"
-                                )
-                                if (imagePath != null) {
-                                    val shareIntent = Intent(Intent.ACTION_SEND)
-                                    shareIntent.type = "image/jpg"
-                                    shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(imagePath))
-                                    shareIntent.putExtra(Intent.EXTRA_TEXT, "Basic APOD sharing!")
-                                    startActivity(Intent.createChooser(shareIntent, "Share image using"))
-                                } else {
-                                    Toast.makeText(
-                                        this@ExpandedImageActivity,
-                                        "Error saving image, please try again",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
-                        }
-                        saveImage.setOnClickListener {
-                            if (hasWritePermissions()) {
-                                requestPermissionCallback.invoke()
-                            } else {
-                                requestWritePermission(REQUEST_WRITE_STORAGE_REQUEST_CODE_SAVE)
-                            }
-                        }
-                        shareApod.setOnClickListener {
-                            if (hasWritePermissions()) {
-                                shareImageCallback.invoke()
-                            } else {
-                                requestWritePermission(REQUEST_WRITE_STORAGE_REQUEST_CODE_SHARE)
-                            }
-                        }
-                        return false
-                    }
-                })
-                .error(ContextCompat.getDrawable(this, R.drawable.ic_asteroid))
-                .into(expanded_ImageView as ImageView)
-        }
         closeDialog.setOnClickListener {
             super.onBackPressed()
         }
     }
 
-    fun saveImageToGallery(bitmap: Bitmap, title: String, description: String): String? {
-        val storedImagePath : File = generateImagePath(title, "19-11-2019")
+    fun saveImageToGallery(bitmap: Bitmap, title: String, description: String, date: String): Uri? {
+        val storedImagePath : File = generateImagePath(title, date)
+        if (checkIfFileExists(storedImagePath)) {
+            return Uri.parse(storedImagePath.path)
+        }
         if (!compressAndSaveImage(storedImagePath, bitmap)) {
             return null
         }
-        val url : Uri? = addImageToGallery(contentResolver, title, description, "19-11-2019", storedImagePath)
-        return url.toString()
+        return addImageToGallery(contentResolver, title, description, date, storedImagePath)
     }
 
     override fun onRequestPermissionsResult(
@@ -193,24 +188,17 @@ class ExpandedImageActivity : AppCompatActivity() {
 
     private fun hasWritePermissions(): Boolean {
         return ContextCompat.checkSelfPermission(
-            baseContext, WRITE_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED
+            baseContext, WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
     }
 
     fun drawableToBitmap(drawable: Drawable): Bitmap {
-        val bitmap: Bitmap = if (drawable.intrinsicWidth <= 0 || drawable.intrinsicHeight <= 0) {
-            Bitmap.createBitmap(
-                1,
-                1,
-                Bitmap.Config.ARGB_8888
-            ) // Single color bitmap will be created of 1x1 pixel
-        } else {
-            Bitmap.createBitmap(
+        check(!(drawable.intrinsicWidth <= 0 || drawable.intrinsicHeight <= 0))
+
+        val bitmap: Bitmap = Bitmap.createBitmap(
                 drawable.intrinsicWidth,
                 drawable.intrinsicHeight,
                 Bitmap.Config.ARGB_8888
             )
-        }
 
         if (drawable is BitmapDrawable && drawable.bitmap != null) {
             return drawable.bitmap

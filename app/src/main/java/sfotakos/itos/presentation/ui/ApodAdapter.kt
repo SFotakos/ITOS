@@ -11,7 +11,6 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Button
 import android.widget.TextView
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.paging.PagedListAdapter
@@ -166,7 +165,7 @@ class ApodAdapter(
 
                     itemView.apodPicture_imageView.setOnClickListener {
                         ViewCompat.setTransitionName(itemView.apodPicture_imageView, apod.date)
-                        listener.zoomImageFromThumb(itemView.apodPicture_imageView, apod.url)
+                        listener.expandImage(itemView.apodPicture_imageView, apod)
                     }
                 }
                 apod.mediaType == MediaType.VIDEO.mediaTypeValue -> {
@@ -235,6 +234,6 @@ class ApodAdapter(
     }
 
     interface ApodAdapterListener {
-        fun zoomImageFromThumb(thumbView: View, imageUrl: String)
+        fun expandImage(apodPicture: View, apod: APOD)
     }
 }

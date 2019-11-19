@@ -16,10 +16,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import sfotakos.itos.data.entities.APOD
 import sfotakos.itos.data.repositories.db.ApodDb
 import sfotakos.itos.network.ConnectionLiveData
-import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_URL_ARG
-import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.TRANSITION_NAME_ARG
+import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_IMAGE_TRANSITION_NAME
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
+import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_ARG
 
 class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 
@@ -85,15 +85,15 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
         }
     }
 
-    override fun zoomImageFromThumb(thumbView: View, imageUrl: String) {
+    override fun expandImage(apodPicture: View, apod: APOD) {
         val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
             this,
-            thumbView,
-            ViewCompat.getTransitionName(thumbView)!!
+            apodPicture,
+            ViewCompat.getTransitionName(apodPicture)!!
         )
         val expandedImageIntent = Intent(this, ExpandedImageActivity::class.java)
-        expandedImageIntent.putExtra(TRANSITION_NAME_ARG, ViewCompat.getTransitionName(thumbView)!!)
-        expandedImageIntent.putExtra(APOD_URL_ARG, imageUrl)
+        expandedImageIntent.putExtra(APOD_IMAGE_TRANSITION_NAME, ViewCompat.getTransitionName(apodPicture)!!)
+        expandedImageIntent.putExtra(APOD_ARG, apod)
         startActivity(expandedImageIntent, options.toBundle())
     }
 }
