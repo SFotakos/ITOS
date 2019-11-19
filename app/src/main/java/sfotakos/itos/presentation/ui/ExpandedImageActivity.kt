@@ -26,6 +26,10 @@ import android.view.animation.Animation
 import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
 import sfotakos.itos.R
+import sfotakos.itos.data.FileUtils.addImageToGallery
+import sfotakos.itos.data.FileUtils.compressAndSaveImage
+import sfotakos.itos.data.FileUtils.generateImagePath
+import java.io.File
 
 class ExpandedImageActivity : AppCompatActivity() {
 
@@ -151,7 +155,12 @@ class ExpandedImageActivity : AppCompatActivity() {
     }
 
     fun saveImageToGallery(bitmap: Bitmap, title: String, description: String): String? {
-        return MediaStore.Images.Media.insertImage(contentResolver, bitmap, title, description)
+        val storedImagePath : File = generateImagePath(title, "19-11-2019")
+        if (!compressAndSaveImage(storedImagePath, bitmap)) {
+            return null
+        }
+        val url : Uri? = addImageToGallery(contentResolver, title, description, "19-11-2019", storedImagePath)
+        return url.toString()
     }
 
     override fun onRequestPermissionsResult(
