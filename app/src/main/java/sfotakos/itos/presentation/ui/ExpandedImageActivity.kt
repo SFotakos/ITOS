@@ -21,6 +21,7 @@ import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.widget.Toast
+import sfotakos.itos.BuildConfig
 import sfotakos.itos.R
 import sfotakos.itos.data.FileUtils.addImageToGallery
 import sfotakos.itos.data.FileUtils.checkIfFileExists
@@ -91,7 +92,13 @@ class ExpandedImageActivity : AppCompatActivity() {
                         val shareIntent = Intent(Intent.ACTION_SEND)
                         shareIntent.type = "image/jpg"
                         shareIntent.putExtra(Intent.EXTRA_STREAM, imagePath)
-                        shareIntent.putExtra(Intent.EXTRA_TEXT, apod.title + " captured by " + apod.copyright + " on " + apod.date)
+                        shareIntent.putExtra(Intent.EXTRA_TEXT,
+                            apod.title +
+                                    " captured by " + apod.copyright +
+                                    " on " + apod.date +
+                                    "\nYou can see more by downloading our app " +
+                                    "https://play.google.com/store/apps/details?id=" +
+                                    BuildConfig.APPLICATION_ID)
                         startActivity(Intent.createChooser(shareIntent, "Share with..."))
                     } else {
                         Toast.makeText(
