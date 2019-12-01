@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">I.T.O.S.</string>
     <string name="action_home_menu_info">Info</string>
+    <string name="action_home_menu_calendar">Calendar</string>
 
     <string name="copyright_format">\u00a9 %1$s</string>
     <string name="public_domain">Public Domain</string>

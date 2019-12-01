@@ -1,7 +1,11 @@
 package sfotakos.itos.presentation.ui
 
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
@@ -13,13 +17,16 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
-import sfotakos.itos.data.entities.APOD
-import sfotakos.itos.data.repositories.db.ApodDb
-import sfotakos.itos.network.ConnectionLiveData
-import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_IMAGE_TRANSITION_NAME
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
+import sfotakos.itos.data.entities.APOD
+import sfotakos.itos.data.repositories.db.ApodDb
+import sfotakos.itos.data.repositories.db.ContinuityDb
+import sfotakos.itos.network.ConnectionLiveData
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_ARG
+import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_IMAGE_TRANSITION_NAME
+import java.util.*
+import java.util.Calendar.JUNE
 
 class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 
@@ -27,6 +34,8 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 
     private lateinit var connectionLiveData: ConnectionLiveData
     private lateinit var viewModel: ApodViewModel
+
+    private val selectionCalendar = Calendar.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,11 +45,49 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 
         connectionLiveData = ConnectionLiveData(this)
         viewModel = ViewModelProviders
-            .of(this, ApodViewModelFactory(ApodDb.create(this)))
+            .of(this, ApodViewModelFactory(ApodDb.create(this), ContinuityDb.create(this)))
             .get(ApodViewModel::class.java)
 
         initializeList()
         initializeNetworkObserver()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(sfotakos.itos.R.menu.menu_home, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        return when (item.itemId) {
+            sfotakos.itos.R.id.action_home_menu_calendar -> {
+                val dateSetListener: DatePickerDialog.OnDateSetListener? =
+                    DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
+                        selectionCalendar.set(Calendar.YEAR, year)
+                        selectionCalendar.set(Calendar.MONTH, month)
+                        selectionCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                        fetchApodByDate(selectionCalendar.time)
+                    }
+                val datePickerDialog = DatePickerDialog(
+                    this, dateSetListener,
+                    selectionCalendar.get(Calendar.YEAR),
+                    selectionCalendar.get(Calendar.MONTH),
+                    selectionCalendar.get(Calendar.DAY_OF_MONTH)
+                )
+                val minDateCalendar = Calendar.getInstance()
+                minDateCalendar.set(Calendar.YEAR, 1995)
+                minDateCalendar.set(Calendar.MONTH, JUNE)
+                minDateCalendar.set(Calendar.DAY_OF_MONTH, 16)
+                datePickerDialog.datePicker.maxDate = Calendar.getInstance().timeInMillis
+                datePickerDialog.datePicker.minDate = minDateCalendar.timeInMillis
+                datePickerDialog.show()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     private fun initializeNetworkObserver() {
@@ -68,20 +115,14 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
                 )!!
             )
         )
-
-        viewModel.apods.observe(this, Observer<PagedList<APOD>> {
-            adapter.submitList(it)
-        })
-
-        viewModel.networkState.observe(this, Observer {
-            adapter.setNetworkState(it)
-        })
+        attachObservers()
     }
 
-    class ApodViewModelFactory(private val db: ApodDb) : ViewModelProvider.Factory {
+    class ApodViewModelFactory(private val apodDb: ApodDb, private val continuityDb: ContinuityDb) :
+        ViewModelProvider.Factory {
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
-            return ApodViewModel(db) as T
+            return ApodViewModel(apodDb, continuityDb) as T
         }
     }
 
@@ -92,8 +133,34 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
             ViewCompat.getTransitionName(apodPicture)!!
         )
         val expandedImageIntent = Intent(this, ExpandedImageActivity::class.java)
-        expandedImageIntent.putExtra(APOD_IMAGE_TRANSITION_NAME, ViewCompat.getTransitionName(apodPicture)!!)
+        expandedImageIntent.putExtra(
+            APOD_IMAGE_TRANSITION_NAME,
+            ViewCompat.getTransitionName(apodPicture)!!
+        )
         expandedImageIntent.putExtra(APOD_ARG, apod)
         startActivity(expandedImageIntent, options.toBundle())
+    }
+
+    //TODO research if I really need to rebind the observer like this
+    //TODO should attachObservers when viewModel has finished preparation, probably observe on another variable.
+    private fun fetchApodByDate(date: Date) {
+        detachObservers()
+        viewModel.fetchApodByDate(date)
+        attachObservers()
+    }
+
+    private fun detachObservers() {
+        viewModel.apods.removeObservers(this)
+        viewModel.networkState.removeObservers(this)
+    }
+
+    private fun attachObservers() {
+        viewModel.apods.observe(this, Observer<PagedList<APOD>> {
+            adapter.submitList(it)
+        })
+
+        viewModel.networkState.observe(this, Observer {
+            adapter.setNetworkState(it)
+        })
     }
 }

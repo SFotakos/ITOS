@@ -1,5 +1,6 @@
 package sfotakos.itos.presentation.ui
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
@@ -7,17 +8,33 @@ import androidx.lifecycle.ViewModel
 import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
 import sfotakos.itos.data.entities.APOD
+import sfotakos.itos.data.repositories.APODService
 import sfotakos.itos.data.repositories.ApodBoundaryCallback
 import sfotakos.itos.data.repositories.db.ApodDb
+import sfotakos.itos.data.repositories.db.ContinuityDb
 import sfotakos.itos.network.NetworkState
 import sfotakos.itos.network.ResponseWrapper
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.concurrent.thread
 
-class ApodViewModel(private val db: ApodDb) : ViewModel() {
+class ApodViewModel(private val apodDb: ApodDb, private val continuityDb: ContinuityDb) : ViewModel() {
 
-    private val repoResult: MutableLiveData<ResponseWrapper<APOD>> = fetchApods()
+    companion object {
+        const val INITIAL_LOAD_SIZE = 8
+        const val PAGE_SIZE = 4
+    }
 
-    val apods: LiveData<PagedList<APOD>> = Transformations.switchMap(repoResult) { it.pagedList }
-    val networkState: LiveData<NetworkState> =
+    private val config = PagedList.Config.Builder()
+        .setInitialLoadSizeHint(INITIAL_LOAD_SIZE)
+        .setPageSize(PAGE_SIZE)
+        .setEnablePlaceholders(false)
+        .build()
+
+    private var repoResult: MutableLiveData<ResponseWrapper<APOD>> = fetchApods()
+
+    var apods: LiveData<PagedList<APOD>> = Transformations.switchMap(repoResult) { it.pagedList }
+    var networkState: LiveData<NetworkState> =
         Transformations.switchMap(repoResult) { it.networkState }
 
     fun retry() {
@@ -25,18 +42,13 @@ class ApodViewModel(private val db: ApodDb) : ViewModel() {
         listing?.retry?.invoke()
     }
 
-    //TODO remove magic numbers
-    private fun fetchApods(): MutableLiveData<ResponseWrapper<APOD>> {
-        val config = PagedList.Config.Builder()
-            .setInitialLoadSizeHint(8)
-            .setPageSize(4)
-            .setEnablePlaceholders(false)
-            .build()
+    private fun fetchApods(initialDate: String? = null): MutableLiveData<ResponseWrapper<APOD>> {
         val livePageListBuilder = LivePagedListBuilder<Int, APOD>(
-            db.apodDao().queryAllApods(),
+            continuityDb.apodDao().queryAllApods(),
             config
         )
-        val boundaryCallback = ApodBoundaryCallback(db)
+        val boundaryCallback = ApodBoundaryCallback(apodDb, continuityDb)
+        boundaryCallback.setInitialKey(initialDate)
         livePageListBuilder.setBoundaryCallback(boundaryCallback)
 
         val mutableLiveData: MutableLiveData<ResponseWrapper<APOD>> = MutableLiveData()
@@ -47,6 +59,19 @@ class ApodViewModel(private val db: ApodDb) : ViewModel() {
                 boundaryCallback.helper.retryAllFailed()
             }
         )
+
         return mutableLiveData
+    }
+
+    @SuppressLint("SimpleDateFormat")
+    fun fetchApodByDate(date: Date) {
+        apods.value?.dataSource?.invalidate()
+        apods.value?.detach()
+        thread {
+            continuityDb.apodDao().deleteAll()
+        }
+        repoResult = fetchApods(SimpleDateFormat(APODService.QUERY_DATE_FORMAT).format(date))
+        apods = Transformations.switchMap(repoResult) { it.pagedList }
+        networkState = Transformations.switchMap(repoResult) { it.networkState }
     }
 }

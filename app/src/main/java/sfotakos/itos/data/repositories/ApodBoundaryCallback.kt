@@ -1,7 +1,6 @@
 package sfotakos.itos.data.repositories
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.paging.PagedList
 import androidx.paging.PagingRequestHelper
 import sfotakos.itos.data.entities.APOD
@@ -11,15 +10,23 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import sfotakos.itos.BuildConfig
+import sfotakos.itos.data.repositories.db.ContinuityDb
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
 
-class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<APOD>() {
+class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb: ContinuityDb) : PagedList.BoundaryCallback<APOD>() {
 
     companion object {
         const val YESTERDAY = -1
         const val TOMORROW = 1
+    }
+
+    private var initialKey: String? = null
+
+    //This is so we can recycle this class instead of creating a new one every time the initial key changes
+    fun setInitialKey(key: String?){
+        initialKey = key
     }
 
     //TODO add multi thread executor
@@ -28,7 +35,13 @@ class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<
 
     override fun onZeroItemsLoaded() {
         super.onZeroItemsLoaded()
-        fetchApods(Calendar.getInstance(), PagingRequestHelper.RequestType.INITIAL)
+        val calendar = Calendar.getInstance()
+        initialKey?.let {
+            calendar.time =
+            SimpleDateFormat(APODService.QUERY_DATE_FORMAT, Locale.ENGLISH)
+                .parse(initialKey)
+        }
+        fetchApods(calendar, PagingRequestHelper.RequestType.INITIAL)
     }
 
     override fun onItemAtFrontLoaded(itemAtFront: APOD) {
@@ -52,11 +65,19 @@ class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<
         fetchApods(getPreviousDay(calendar), PagingRequestHelper.RequestType.AFTER)
     }
 
+    //Check if the APOD exists in the apod.db, if it doesn't fetch it from NASA API
     private fun fetchApods(calendar: Calendar, requestType: PagingRequestHelper.RequestType) {
         helper.runIfNotRunning(requestType) {
-            APODService.createService()
-                .getApodByDate(BuildConfig.NASA_KEY, getDateString(calendar))
-                .enqueue(createWebserviceCallback(it))
+            Executors.newSingleThreadExecutor().execute {
+                val apod: APOD? = apodDb.apodDao().queryByDate(getDateString(calendar))
+                if (apod != null) {
+                    onSuccessfulFetch(apod, it)
+                } else {
+                    APODService.createService()
+                        .getApodByDate(BuildConfig.NASA_KEY, getDateString(calendar))
+                        .enqueue(createWebserviceCallback(it))
+                }
+            }
         }
     }
 
@@ -79,10 +100,8 @@ class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<
                     val apod: APOD? = response.body()
                     if (apod != null) {
                         Executors.newSingleThreadExecutor().execute {
-                            db.apodDao().insertApod(apod)
-                            it.recordSuccess()
+                            onSuccessfulFetch(apod, it)
                         }
-
                     } else {
                         recordFailure(it, "APOD must not be null")
                     }
@@ -92,6 +111,12 @@ class ApodBoundaryCallback(private val db: ApodDb) : PagedList.BoundaryCallback<
                 }
             }
         }
+    }
+
+    private fun onSuccessfulFetch(apod: APOD, requestCallback: PagingRequestHelper.Request.Callback){
+        continuityDb.apodDao().insertApod(apod)
+        apodDb.apodDao().insertApod(apod)
+        requestCallback.recordSuccess()
     }
 
     private fun recordFailure(it: PagingRequestHelper.Request.Callback, error: String) {

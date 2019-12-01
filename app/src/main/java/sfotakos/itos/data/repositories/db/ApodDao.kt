@@ -1,10 +1,7 @@
 package sfotakos.itos.data.repositories.db
 
 import androidx.paging.DataSource
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import sfotakos.itos.data.entities.APOD
 
 @Dao
@@ -14,4 +11,10 @@ interface ApodDao {
 
     @Query("SELECT * FROM APOD ORDER BY DATE DESC")
     fun queryAllApods(): DataSource.Factory<Int, APOD>
+
+    @Query("SELECT * FROM APOD WHERE DATE = :selectedDate ORDER BY DATE DESC")
+    fun queryByDate(selectedDate: String): APOD
+
+    @Query("DELETE FROM APOD")
+    fun deleteAll()
 }
