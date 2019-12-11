@@ -39,10 +39,19 @@ class ApodAdapter(
     PagedListAdapter<APOD, RecyclerView.ViewHolder>(ApodDiffUtilCallback()) {
 
     private var networkState: NetworkState? = null
+    private var lastBind : APOD? = null
+    private lateinit var isVisible : (View) -> Boolean
 
     companion object {
         const val ICON_MIN_SIZE = 96f
         const val LOADING_MIN_SIZE = 144f
+    }
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        isVisible = { view : View ->
+            recyclerView.layoutManager!! //TODO properly
+                .isViewPartiallyVisible(view, false, false) }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -68,6 +77,9 @@ class ApodAdapter(
         when (getItemViewType(position)) {
             R.layout.item_apod -> {
                 getItem(position)?.let {
+                    if (isVisible(holder.itemView)) {
+                        lastBind = it
+                    }
                     (holder as ApodViewHolder).bind(it)
                 }
             }
@@ -105,6 +117,10 @@ class ApodAdapter(
         } else if (hasExtraRow && previousState != newNetworkState) {
             notifyItemChanged(itemCount - 1)
         }
+    }
+
+    fun getLastBind() : APOD? {
+        return lastBind
     }
 
     class ApodViewHolder(itemView: View, private val listener: ApodAdapterListener) :

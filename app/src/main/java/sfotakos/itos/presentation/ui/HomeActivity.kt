@@ -1,9 +1,10 @@
 package sfotakos.itos.presentation.ui
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.preference.PreferenceManager
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -20,14 +21,18 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
 import sfotakos.itos.data.entities.APOD
+import sfotakos.itos.data.repositories.APODService
 import sfotakos.itos.data.repositories.db.ApodDb
 import sfotakos.itos.data.repositories.db.ContinuityDb
 import sfotakos.itos.network.ConnectionLiveData
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_ARG
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_IMAGE_TRANSITION_NAME
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.Calendar.JUNE
 
+//TODO DateFormat Should be Utils by now
+//TODO sharedPreference shouldn't be this poorly used.
 class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 
     private val adapter = ApodAdapter(this) { viewModel.retry() }
@@ -37,6 +42,7 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 
     private val selectionCalendar = Calendar.getInstance()
 
+    @SuppressLint("SimpleDateFormat")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(sfotakos.itos.R.layout.activity_home)
@@ -50,6 +56,12 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 
         initializeList()
         initializeNetworkObserver()
+
+        val sharedPref =
+            PreferenceManager.getDefaultSharedPreferences(this@HomeActivity)
+        sharedPref.getString("LastDate", null)?.let {
+            fetchApodByDate(SimpleDateFormat(APODService.QUERY_DATE_FORMAT).parse(it))
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -124,6 +136,15 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
             @Suppress("UNCHECKED_CAST")
             return ApodViewModel(apodDb, continuityDb) as T
         }
+    }
+
+    override fun onPause() {
+        adapter.getLastBind()?.let {
+            val sharedPref =
+                PreferenceManager.getDefaultSharedPreferences(this@HomeActivity)
+            sharedPref.edit().putString("LastDate", it.date).commit()
+        }
+        super.onPause()
     }
 
     override fun expandImage(apodPicture: View, apod: APOD) {
