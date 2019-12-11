@@ -10,6 +10,7 @@
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:colorBackground">@android:color/transparent</item>
         <item name="android:windowContentTransitions">true</item>
+        <item name="android:datePickerDialogTheme">@style/MyDatePickerDialogTheme</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -28,5 +29,9 @@
         <item name="android:windowFullscreen">false</item>
         <item name="android:windowIsFloating">false</item>
         <item name="android:windowBackground">@android:color/black</item>
+    </style>
+
+    <style name="MyDatePickerDialogTheme" parent="android:Theme.Material.Light.Dialog">
+        <item name="android:colorAccent">@color/colorPrimary</item>
     </style>
 </resources>
