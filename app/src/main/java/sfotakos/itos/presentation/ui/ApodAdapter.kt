@@ -1,5 +1,6 @@
 package sfotakos.itos.presentation.ui
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.Intent.ACTION_VIEW
 import android.graphics.drawable.Drawable
@@ -27,8 +28,13 @@ import kotlinx.android.synthetic.main.item_apod.view.*
 import sfotakos.itos.R
 import sfotakos.itos.data.entities.APOD
 import sfotakos.itos.data.entities.MediaType
+import sfotakos.itos.data.repositories.APODService
 import sfotakos.itos.network.NetworkState
 import sfotakos.itos.network.Status
+import java.text.DateFormat
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.*
 import kotlin.math.roundToInt
 
 //TODO proper error layout
@@ -139,6 +145,7 @@ class ApodAdapter(
             }
         }
 
+        @SuppressLint("SimpleDateFormat")
         fun bind(apod: APOD) {
             val context = itemView.context
             itemView.apodPicture_imageView.visibility = View.INVISIBLE
@@ -199,7 +206,18 @@ class ApodAdapter(
             } else {
                 context.getString(R.string.copyright_format, apod.copyright)
             }
-            itemView.apodDate_textView.text = apod.date
+
+            //TODO once again, date formatting class
+            val apiDateFormat = SimpleDateFormat(APODService.QUERY_DATE_FORMAT)
+            val date : Date?
+            try {
+                date = apiDateFormat.parse(apod.date)
+                val finalDateFormat = DateFormat.getDateInstance(DateFormat.SHORT, Locale.getDefault())
+                itemView.apodDate_textView.text = finalDateFormat.format(date)
+            } catch (e: ParseException) {
+                itemView.apodDate_textView.text = apod.date
+            }
+
             itemView.apodDescription_textView.text = apod.explanation
         }
     }
