@@ -20,6 +20,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import kotlinx.android.synthetic.main.item_apod.view.*
@@ -42,7 +43,8 @@ class ApodAdapter(
 
     companion object {
         const val ICON_MIN_SIZE = 96f
-        const val LOADING_MIN_SIZE = 144f
+        const val LOADING_MIN_SIZE = 190f
+        const val CROSSFADE_DURATION = 450
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -155,6 +157,7 @@ class ApodAdapter(
                     Glide.with(context)
                         .load(apod.url)
                         .listener(requestListener)
+                        .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
                         .error(ContextCompat.getDrawable(context, R.drawable.ic_asteroid))
                         .transform(
                             RoundedCorners(
