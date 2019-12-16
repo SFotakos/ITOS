@@ -11,15 +11,20 @@ import retrofit2.Callback
 import retrofit2.Response
 import sfotakos.itos.BuildConfig
 import sfotakos.itos.data.repositories.db.ContinuityDb
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
 
 class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb: ContinuityDb) : PagedList.BoundaryCallback<APOD>() {
 
+    //TODO get context into this class to get from strings.xml
     companion object {
         const val YESTERDAY = -1
         const val TOMORROW = 1
+        const val INTERNAL_SERVER_ERROR = 500
+        const val TEMP_ERROR_MSG = "There was a rip in the space, we'll try mending it."
+        const val ERROR_CODE_FORMAT = " (%d)"
     }
 
     private var initialKey: String? = null
@@ -29,7 +34,7 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
         initialKey = key
     }
 
-    //TODO add multi thread executor
+    //TODO add multi thread executor?
     val helper = PagingRequestHelper(Executors.newSingleThreadExecutor())
     val networkState = helper.createStatusLiveData()
 
@@ -88,8 +93,12 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                 call: Call<APOD>,
                 t: Throwable
             ) {
-                //TODO treat error to differ between network and parsing errors.
-                it.recordFailure(t)
+                when (t) {
+                    is IOException -> recordFailure(it,
+                        "Planet tracking was lost, retrieving connection...")
+                    else -> recordFailure(it,
+                        TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(-1))
+                }
             }
 
             override fun onResponse(
@@ -103,11 +112,22 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                             onSuccessfulFetch(apod, it)
                         }
                     } else {
-                        recordFailure(it, "APOD must not be null")
+                        recordFailure(it,
+                            TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(-200))
                     }
                 } else {
-                    //TODO proper error treatment
-                    recordFailure(it, response.errorBody()!!.string())
+                    //TODO gracefully deal with INTERNAL_SERVER_ERROR
+                    when(response.code()) {
+                        INTERNAL_SERVER_ERROR -> {
+                            recordFailure(
+                                it,
+                                TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(response.code())
+                            )
+                            //Skip date.
+                        }
+                        else -> recordFailure(it,
+                            TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(response.code()))
+                    }
                 }
             }
         }

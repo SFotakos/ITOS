@@ -20,28 +20,33 @@
         android:layout_height="wrap_content"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:orientation="vertical"
-        android:background="@color/colorPadding"
-        android:padding="8dp">
+        android:background="@color/colorPadding">
 
     <TextView
-        android:id="@+id/error_msg"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+            android:id="@+id/error_msg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:textColor="@android:color/white"
-        android:layout_gravity="center_horizontal"/>
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:textSize="14sp"/>
+
     <com.airbnb.lottie.LottieAnimationView
             android:id="@+id/progress"
-            android:layout_width="104dp"
-            android:layout_height="104dp"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
             app:lottie_rawRes="@raw/loading_planet"
             app:lottie_loop="true"
             app:lottie_autoPlay="true"
             android:layout_gravity="center"/>
     <Button
-        android:id="@+id/retry_button"
-        style="@style/Widget.AppCompat.Button.Colored"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="@string/retry"/>
+            android:id="@+id/retry_button"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:text="@string/retry"/>
+
 </LinearLayout>
