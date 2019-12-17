@@ -92,9 +92,11 @@ class ExpandedImageActivity : AppCompatActivity() {
                         val shareIntent = Intent(Intent.ACTION_SEND)
                         shareIntent.type = "image/jpg"
                         shareIntent.putExtra(Intent.EXTRA_STREAM, imagePath)
+                        val copyrightText =
+                            if (apod.copyright != null) " captured by " + apod.copyright
+                            else " as seen"
                         shareIntent.putExtra(Intent.EXTRA_TEXT,
-                            apod.title +
-                                    " captured by " + apod.copyright +
+                            apod.title + copyrightText +
                                     " on " + apod.date +
                                     "\nYou can see more by downloading our app " +
                                     "https://play.google.com/store/apps/details?id=" +
