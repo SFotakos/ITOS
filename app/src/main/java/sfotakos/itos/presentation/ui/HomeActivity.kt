@@ -19,7 +19,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.skydoves.balloon.ArrowOrientation
+import com.skydoves.balloon.*
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
 import sfotakos.itos.data.entities.APOD
@@ -30,8 +30,6 @@ import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_ARG
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_IMAGE_TRANSITION_NAME
 import java.util.*
 import java.util.Calendar.JUNE
-import com.skydoves.balloon.BalloonAnimation
-import com.skydoves.balloon.createBalloon
 import kotlinx.android.synthetic.main.popup_about.view.*
 import sfotakos.itos.R
 
@@ -44,6 +42,10 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
     private lateinit var viewModel: ApodViewModel
 
     private val selectionCalendar = Calendar.getInstance()
+    private var balloon : Balloon? = null
+    //TODO fix lib?
+    // balloon.isShowing always returns false
+    private var balloonIsShowing : Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,21 +97,34 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
                 true
             }
             R.id.action_home_menu_info -> {
-                val balloon = createBalloon(baseContext) {
-                    setArrowVisible(false)
-                    setWidthRatio(1f)
-                    setHeight(420)
-                    setCornerRadius(12f)
-                    setAlpha(1f)
-                    setBackgroundDrawable(resources.getDrawable(R.drawable.popup_background, null))
-                    setLayout(R.layout.popup_about)
-                    setBalloonAnimation(BalloonAnimation.FADE)
-                    setLifecycleOwner(this@HomeActivity)
-                    setDismissWhenClicked(true)
-                    setDismissWhenTouchOutside(true)
-                    setDismissWhenShowAgain(true)
+                if (balloon == null) {
+                    balloon = createBalloon(baseContext) {
+                        setArrowVisible(true)
+                        setArrowOrientation(ArrowOrientation.TOP)
+                        setArrowPosition(0.942f)
+                        setArrowSize(16)
+                        setWidthRatio(1f)
+                        setHeight(420)
+                        setCornerRadius(12f)
+                        setAlpha(1f)
+                        setBackgroundColorResource(R.color.colorBorder)
+                        setBackgroundDrawable(resources.getDrawable(R.drawable.popup_background, null))
+                        setLayout(R.layout.popup_about)
+                        setBalloonAnimation(BalloonAnimation.FADE)
+                        setLifecycleOwner(this@HomeActivity)
+                        setDismissWhenClicked(true)
+                        setDismissWhenShowAgain(true)
+                        setDismissWhenTouchOutside(true)
+                    }
                 }
-                balloon.showAlignBottom(findViewById(R.id.action_home_menu_info))
+                balloonIsShowing = if (balloon != null && balloonIsShowing) {
+                    balloon?.dismiss()
+                    false
+                } else {
+                    balloon?.showAlignBottom(findViewById(R.id.action_home_menu_info))
+                    true
+                }
+
                 true
             }
             else -> super.onOptionsItemSelected(item)

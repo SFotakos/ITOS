@@ -7,4 +7,5 @@
     <color name="colorPadding">#FF05101B</color>
     <color name="white20percent">#33FFFFFF</color>
     <color name="white40percent">#66FFFFFF</color>
+    <color name="colorBorder">#FF3A5166</color>
 </resources>

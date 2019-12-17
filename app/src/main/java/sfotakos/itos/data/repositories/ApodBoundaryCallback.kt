@@ -23,7 +23,7 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
         const val YESTERDAY = -1
         const val TOMORROW = 1
         const val INTERNAL_SERVER_ERROR = 500
-        const val TEMP_ERROR_MSG = "There was a rip in the space, we'll try mending it."
+        const val TEMP_ERROR_MSG = "There was a rip in time space, we'll try mending it."
         const val ERROR_CODE_FORMAT = " (%d)"
     }
 
