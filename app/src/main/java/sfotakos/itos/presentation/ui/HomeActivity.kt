@@ -2,6 +2,7 @@ package sfotakos.itos.presentation.ui
 
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -9,13 +10,16 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.ViewCompat.setBackground
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.skydoves.balloon.ArrowOrientation
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
 import sfotakos.itos.data.entities.APOD
@@ -26,6 +30,11 @@ import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_ARG
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_IMAGE_TRANSITION_NAME
 import java.util.*
 import java.util.Calendar.JUNE
+import com.skydoves.balloon.BalloonAnimation
+import com.skydoves.balloon.createBalloon
+import kotlinx.android.synthetic.main.popup_about.view.*
+import sfotakos.itos.R
+
 
 class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 
@@ -38,7 +47,7 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(sfotakos.itos.R.layout.activity_home)
+        setContentView(R.layout.activity_home)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
@@ -53,7 +62,7 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(sfotakos.itos.R.menu.menu_home, menu)
+        menuInflater.inflate(R.menu.menu_home, menu)
         return true
     }
 
@@ -62,7 +71,7 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            sfotakos.itos.R.id.action_home_menu_calendar -> {
+            R.id.action_home_menu_calendar -> {
                 val dateSetListener: DatePickerDialog.OnDateSetListener? =
                     DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
                         selectionCalendar.set(Calendar.YEAR, year)
@@ -83,6 +92,24 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
                 datePickerDialog.datePicker.maxDate = Calendar.getInstance().timeInMillis
                 datePickerDialog.datePicker.minDate = minDateCalendar.timeInMillis
                 datePickerDialog.show()
+                true
+            }
+            R.id.action_home_menu_info -> {
+                val balloon = createBalloon(baseContext) {
+                    setArrowVisible(false)
+                    setWidthRatio(1f)
+                    setHeight(420)
+                    setCornerRadius(12f)
+                    setAlpha(1f)
+                    setBackgroundDrawable(resources.getDrawable(R.drawable.popup_background, null))
+                    setLayout(R.layout.popup_about)
+                    setBalloonAnimation(BalloonAnimation.FADE)
+                    setLifecycleOwner(this@HomeActivity)
+                    setDismissWhenClicked(true)
+                    setDismissWhenTouchOutside(true)
+                    setDismissWhenShowAgain(true)
+                }
+                balloon.showAlignBottom(findViewById(R.id.action_home_menu_info))
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -110,7 +137,7 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
             ApodItemDecoration(
                 ContextCompat.getDrawable(
                     this,
-                    sfotakos.itos.R.drawable.divider_apod
+                    R.drawable.divider_apod
                 )!!
             )
         )
