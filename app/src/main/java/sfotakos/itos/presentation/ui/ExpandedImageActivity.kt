@@ -148,7 +148,7 @@ class ExpandedImageActivity : AppCompatActivity() {
         Glide.with(this)
             .load(apod.url)
             .listener(requestListener)
-            .error(ContextCompat.getDrawable(this, R.drawable.ic_asteroid))
+            .error(ContextCompat.getDrawable(this, R.drawable.ic_destroyed_planet))
             .into(expanded_ImageView as ImageView)
 
         closeDialog.setOnClickListener {

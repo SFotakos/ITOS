@@ -127,7 +127,14 @@ class ApodAdapter(
             ): Boolean {
                 itemView.apodPicture_imageView.visibility = View.VISIBLE
                 itemView.imageLoading.visibility = View.GONE
-                return false
+                val layoutParams = itemView.apodPicture_imageView.layoutParams
+                val context = itemView.context
+                layoutParams.height = ScalingUtil.dpToPixel(context, LOADING_MIN_SIZE).roundToInt()
+                layoutParams.width = ScalingUtil.dpToPixel(context, LOADING_MIN_SIZE).roundToInt()
+                itemView.apodPicture_imageView.layoutParams = layoutParams
+                itemView.apodPicture_imageView.setImageDrawable(
+                    ContextCompat.getDrawable(context, R.drawable.ic_destroyed_planet))
+                return true
             }
 
             override fun onResourceReady(
@@ -141,6 +148,10 @@ class ApodAdapter(
                 itemView.apodPicture_imageView.minimumWidth = 0
                 itemView.apodPicture_imageView.visibility = View.VISIBLE
                 itemView.imageLoading.visibility = View.GONE
+                val layoutParams = itemView.apodPicture_imageView.layoutParams
+                layoutParams.height = WRAP_CONTENT
+                layoutParams.width = MATCH_PARENT
+                itemView.apodPicture_imageView.layoutParams = layoutParams
                 return false
             }
         }
@@ -165,7 +176,7 @@ class ApodAdapter(
                         .load(apod.url)
                         .listener(requestListener)
                         .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
-                        .error(ContextCompat.getDrawable(context, R.drawable.ic_asteroid))
+                        .error(ContextCompat.getDrawable(context, R.drawable.ic_destroyed_planet))
                         .transform(
                             RoundedCorners(
                                 ScalingUtil.dpToPixel(context, 8f).roundToInt()
