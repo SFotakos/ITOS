@@ -63,11 +63,17 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
 
     override fun onItemAtEndLoaded(itemAtEnd: APOD) {
         super.onItemAtEndLoaded(itemAtEnd)
+        val minDateCalendar = Calendar.getInstance()
+        minDateCalendar.set(Calendar.YEAR, 1995)
+        minDateCalendar.set(Calendar.MONTH, Calendar.JUNE)
+        minDateCalendar.set(Calendar.DAY_OF_MONTH, 16)
         val calendar = Calendar.getInstance()
         calendar.time =
             SimpleDateFormat(APODService.QUERY_DATE_FORMAT, Locale.ENGLISH)
                 .parse(itemAtEnd.date)
-        fetchApods(getPreviousDay(calendar), PagingRequestHelper.RequestType.AFTER)
+        if (calendar >= minDateCalendar) {
+            fetchApods(getPreviousDay(calendar), PagingRequestHelper.RequestType.AFTER)
+        }
     }
 
     //Check if the APOD exists in the apod.db, if it doesn't fetch it from NASA API
@@ -80,13 +86,13 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                 } else {
                     APODService.createService()
                         .getApodByDate(BuildConfig.NASA_KEY, getDateString(calendar))
-                        .enqueue(createWebserviceCallback(it))
+                        .enqueue(createWebserviceCallback(it, requestType))
                 }
             }
         }
     }
 
-    private fun createWebserviceCallback(it: PagingRequestHelper.Request.Callback)
+    private fun createWebserviceCallback(it: PagingRequestHelper.Request.Callback, requestType: PagingRequestHelper.RequestType)
             : Callback<APOD> {
         return object : Callback<APOD> {
             override fun onFailure(
@@ -119,11 +125,34 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                     //TODO gracefully deal with INTERNAL_SERVER_ERROR
                     when(response.code()) {
                         INTERNAL_SERVER_ERROR -> {
-                            recordFailure(
-                                it,
-                                TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(response.code())
-                            )
-                            //Skip date.
+                            val date = call.request().url().queryParameter("date")
+                            if (date != null) {
+                                var calendar = Calendar.getInstance()
+                                calendar.time =
+                                    SimpleDateFormat(APODService.QUERY_DATE_FORMAT, Locale.ENGLISH)
+                                        .parse(date)
+                                calendar = when (requestType) {
+                                    PagingRequestHelper.RequestType.BEFORE -> getNextDay(calendar)
+                                    PagingRequestHelper.RequestType.AFTER -> getPreviousDay(calendar)
+                                    else -> {
+                                        recordFailure(
+                                            it,
+                                            TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(response.code())
+                                        )
+                                        return
+                                    }
+                                }
+                                recordFailure(
+                                    it,
+                                    TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(response.code())
+                                )
+                                fetchApods(calendar, requestType)
+                            } else {
+                                recordFailure(
+                                    it,
+                                    TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(response.code())
+                                )
+                            }
                         }
                         else -> recordFailure(it,
                             TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(response.code()))
