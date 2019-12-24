@@ -152,7 +152,8 @@ class ApodAdapter(
                 layoutParams.height = WRAP_CONTENT
                 layoutParams.width = MATCH_PARENT
                 itemView.apodPicture_imageView.layoutParams = layoutParams
-                return false
+                itemView.apodPicture_imageView.setImageDrawable(resource)
+                return true
             }
         }
 
