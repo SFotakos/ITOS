@@ -6,11 +6,9 @@ import android.content.Context
 import android.content.Context.CONNECTIVITY_SERVICE
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkInfo
-import android.net.NetworkRequest
+import android.net.*
 import android.os.Build
+import android.util.Log
 import androidx.lifecycle.LiveData
 
 class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
@@ -63,6 +61,7 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
             connectivityManagerCallback = object : ConnectivityManager.NetworkCallback() {
+                var previousDownstreamBandwidth : Int = 0
                 override fun onAvailable(network: Network?) {
                     postValue(true)
                 }
@@ -70,6 +69,22 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
                 override fun onLost(network: Network?) {
                     postValue(false)
                 }
+
+                override fun onCapabilitiesChanged(
+                    network: Network?,
+                    networkCapabilities: NetworkCapabilities?
+                ) {
+//                    Log.d("ConnectionLiveData", "onCapabilitiesChanged")
+                    networkCapabilities?.let {
+                        val downstreamBandwidth = networkCapabilities.linkDownstreamBandwidthKbps
+                        if (previousDownstreamBandwidth >= downstreamBandwidth) {
+                            previousDownstreamBandwidth = downstreamBandwidth
+                            postValue(true)
+                        }
+                    }
+
+                }
+
             }
             return connectivityManagerCallback
         } else {
