@@ -115,19 +115,29 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
                         setDismissWhenClicked(true)
                         setDismissWhenShowAgain(true)
                         setDismissWhenTouchOutside(true)
+                        setOnBalloonDismissListener {
+                            balloonIsShowing = false
+                        }
                     }
                 }
-                balloonIsShowing = if (balloon != null && balloonIsShowing) {
+                if (balloon != null && balloonIsShowing) {
                     balloon?.dismiss()
-                    false
                 } else {
                     balloon?.showAlignBottom(findViewById(R.id.action_home_menu_info))
-                    true
+                    balloonIsShowing = true
                 }
 
                 true
             }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onBackPressed() {
+        if (balloon != null && balloonIsShowing) {
+            balloon?.dismiss()
+        } else {
+            super.onBackPressed()
         }
     }
 
