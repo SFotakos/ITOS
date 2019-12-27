@@ -29,6 +29,8 @@ import sfotakos.itos.data.FileUtils.compressAndSaveImage
 import sfotakos.itos.data.FileUtils.generateImagePath
 import sfotakos.itos.data.entities.APOD
 import java.io.File
+import java.util.*
+import kotlin.concurrent.schedule
 
 class ExpandedImageActivity : AppCompatActivity() {
 
@@ -37,6 +39,7 @@ class ExpandedImageActivity : AppCompatActivity() {
         const val APOD_ARG = "ApodArgument"
         const val REQUEST_WRITE_STORAGE_REQUEST_CODE_SAVE = 7891
         const val REQUEST_WRITE_STORAGE_REQUEST_CODE_SHARE = 7892
+        const val DOUBLE_CLICK_DELAY : Long = 300
     }
 
     lateinit var requestPermissionCallback: () -> Unit
@@ -68,8 +71,11 @@ class ExpandedImageActivity : AppCompatActivity() {
                                     Toast.LENGTH_LONG
                                 ).show()
                             }
+                            saveImage.isClickable = true
                         }
-                        override fun onAnimationStart(animation: Animator?) {/*unused*/}
+                        override fun onAnimationStart(animation: Animator?) {
+                            saveImage.isClickable = false
+                        }
                         override fun onAnimationEnd(animation: Animator?) {/*unused*/}
                         override fun onAnimationCancel(animation: Animator?) {/*unused*/}
                     })
@@ -90,7 +96,7 @@ class ExpandedImageActivity : AppCompatActivity() {
                     )
                     if (imagePath != null) {
                         val shareIntent = Intent(Intent.ACTION_SEND)
-                        shareIntent.type = "image/jpg"
+                        shareIntent.type = "image/*"
                         shareIntent.putExtra(Intent.EXTRA_STREAM, imagePath)
                         val copyrightText =
                             if (apod.copyright != null) " captured by " + apod.copyright
@@ -102,6 +108,9 @@ class ExpandedImageActivity : AppCompatActivity() {
                                     "https://play.google.com/store/apps/details?id=" +
                                     BuildConfig.APPLICATION_ID)
                         startActivity(Intent.createChooser(shareIntent, "Share with..."))
+                        Timer("AvoidDoubleClick", false).schedule(DOUBLE_CLICK_DELAY) {
+                            shareApod.isClickable = true
+                        }
                     } else {
                         Toast.makeText(
                             this@ExpandedImageActivity,
@@ -119,6 +128,7 @@ class ExpandedImageActivity : AppCompatActivity() {
                 }
             }
             shareApod.setOnClickListener {
+                shareApod.isClickable = false
                 if (hasWritePermissions()) {
                     shareImageCallback.invoke()
                 } else {
@@ -218,6 +228,4 @@ class ExpandedImageActivity : AppCompatActivity() {
         drawable.draw(canvas)
         return bitmap
     }
-
-
 }
