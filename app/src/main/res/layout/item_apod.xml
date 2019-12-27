@@ -30,7 +30,7 @@
             app:layout_constraintEnd_toEndOf="@+id/apodPicture_imageView"
             app:layout_constraintStart_toStartOf="@+id/apodPicture_imageView"
             app:layout_constraintTop_toTopOf="@+id/apodPicture_imageView"
-            app:lottie_autoPlay="true"
+            app:lottie_autoPlay="false"
             app:lottie_loop="true"
             app:lottie_rawRes="@raw/rocket" />
 
