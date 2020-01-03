@@ -21,8 +21,8 @@ import kotlin.concurrent.thread
 class ApodViewModel(private val apodDb: ApodDb, private val continuityDb: ContinuityDb) : ViewModel() {
 
     companion object {
-        const val INITIAL_LOAD_SIZE = 8
-        const val PAGE_SIZE = 4
+        const val INITIAL_LOAD_SIZE = 50
+        const val PAGE_SIZE = 25
     }
 
     private val config = PagedList.Config.Builder()
