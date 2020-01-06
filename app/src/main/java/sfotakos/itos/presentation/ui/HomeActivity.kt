@@ -1,8 +1,8 @@
 package sfotakos.itos.presentation.ui
 
 import android.app.DatePickerDialog
+import android.app.Dialog
 import android.content.Intent
-import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -10,16 +10,13 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
-import androidx.core.view.ViewCompat.setBackground
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.skydoves.balloon.*
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
 import sfotakos.itos.data.entities.APOD
@@ -30,9 +27,7 @@ import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_ARG
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_IMAGE_TRANSITION_NAME
 import java.util.*
 import java.util.Calendar.JUNE
-import kotlinx.android.synthetic.main.popup_about.view.*
 import sfotakos.itos.R
-
 
 class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 
@@ -42,10 +37,6 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
     private lateinit var viewModel: ApodViewModel
 
     private val selectionCalendar = Calendar.getInstance()
-    private var balloon : Balloon? = null
-    //TODO fix lib?
-    // balloon.isShowing always returns false
-    private var balloonIsShowing : Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,47 +88,13 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
                 true
             }
             R.id.action_home_menu_info -> {
-                if (balloon == null) {
-                    balloon = createBalloon(baseContext) {
-                        setArrowVisible(true)
-                        setArrowOrientation(ArrowOrientation.TOP)
-                        setArrowPosition(0.942f)
-                        setArrowSize(16)
-                        setWidthRatio(1f)
-                        setHeight(420)
-                        setCornerRadius(12f)
-                        setAlpha(1f)
-                        setBackgroundColorResource(R.color.colorBorder)
-                        setBackgroundDrawable(resources.getDrawable(R.drawable.popup_background, null))
-                        setLayout(R.layout.popup_about)
-                        setBalloonAnimation(BalloonAnimation.FADE)
-                        setLifecycleOwner(this@HomeActivity)
-                        setDismissWhenClicked(true)
-                        setDismissWhenShowAgain(true)
-                        setDismissWhenTouchOutside(true)
-                        setOnBalloonDismissListener {
-                            balloonIsShowing = false
-                        }
-                    }
-                }
-                if (balloon != null && balloonIsShowing) {
-                    balloon?.dismiss()
-                } else {
-                    balloon?.showAlignBottom(findViewById(R.id.action_home_menu_info))
-                    balloonIsShowing = true
-                }
-
+                val dialog = Dialog(this)
+                dialog.setContentView(R.layout.popup_about)
+                dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+                dialog.show()
                 true
             }
             else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    override fun onBackPressed() {
-        if (balloon != null && balloonIsShowing) {
-            balloon?.dismiss()
-        } else {
-            super.onBackPressed()
         }
     }
 
