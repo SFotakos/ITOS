@@ -23,8 +23,6 @@ interface APODService {
     ): Call<APOD>
 
     companion object {
-        const val QUERY_DATE_FORMAT = "yyyy-MM-dd"
-
         private const val BASE_URL = "https://api.nasa.gov/"
 
         fun createService(): APODService {

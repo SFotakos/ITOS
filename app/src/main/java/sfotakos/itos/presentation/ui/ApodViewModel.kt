@@ -1,20 +1,18 @@
 package sfotakos.itos.presentation.ui
 
-import android.annotation.SuppressLint
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
+import sfotakos.itos.ApodDateUtils.dateToString
 import sfotakos.itos.data.entities.APOD
-import sfotakos.itos.data.repositories.APODService
 import sfotakos.itos.data.repositories.ApodBoundaryCallback
 import sfotakos.itos.data.repositories.db.ApodDb
 import sfotakos.itos.data.repositories.db.ContinuityDb
 import sfotakos.itos.network.NetworkState
 import sfotakos.itos.network.ResponseWrapper
-import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -63,14 +61,13 @@ class ApodViewModel(private val apodDb: ApodDb, private val continuityDb: Contin
         return mutableLiveData
     }
 
-    @SuppressLint("SimpleDateFormat")
     fun fetchApodByDate(date: Date) {
         apods.value?.dataSource?.invalidate()
         apods.value?.detach()
         thread {
             continuityDb.apodDao().deleteAll()
         }
-        repoResult = fetchApods(SimpleDateFormat(APODService.QUERY_DATE_FORMAT).format(date))
+        repoResult = fetchApods(dateToString(date))
         apods = Transformations.switchMap(repoResult) { it.pagedList }
         networkState = Transformations.switchMap(repoResult) { it.networkState }
     }

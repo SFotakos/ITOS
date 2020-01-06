@@ -24,16 +24,12 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.target.*
 import com.bumptech.glide.request.transition.Transition
 import kotlinx.android.synthetic.main.item_apod.view.*
+import sfotakos.itos.ApodDateUtils.localizedDateString
 import sfotakos.itos.R
 import sfotakos.itos.data.entities.APOD
 import sfotakos.itos.data.entities.MediaType
-import sfotakos.itos.data.repositories.APODService
 import sfotakos.itos.network.NetworkState
 import sfotakos.itos.network.Status
-import java.text.DateFormat
-import java.text.ParseException
-import java.text.SimpleDateFormat
-import java.util.*
 import kotlin.math.roundToInt
 
 //TODO proper error layout
@@ -181,17 +177,7 @@ class ApodAdapter(
                 context.getString(R.string.copyright_format, apod.copyright)
             }
 
-            //TODO once again, date formatting class
-            val apiDateFormat = SimpleDateFormat(APODService.QUERY_DATE_FORMAT)
-            val date : Date?
-            try {
-                date = apiDateFormat.parse(apod.date)
-                val finalDateFormat = DateFormat.getDateInstance(DateFormat.SHORT, Locale.getDefault())
-                itemView.apodDate_textView.text = finalDateFormat.format(date)
-            } catch (e: ParseException) {
-                itemView.apodDate_textView.text = apod.date
-            }
-
+            itemView.apodDate_textView.text = localizedDateString(apod.date)
             itemView.apodDescription_textView.text = apod.explanation
         }
     }

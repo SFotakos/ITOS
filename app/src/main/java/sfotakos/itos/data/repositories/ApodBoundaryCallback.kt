@@ -1,6 +1,5 @@
 package sfotakos.itos.data.repositories
 
-import android.annotation.SuppressLint
 import androidx.paging.PagedList
 import androidx.paging.PagingRequestHelper
 import sfotakos.itos.data.entities.APOD
@@ -9,10 +8,15 @@ import sfotakos.itos.network.createStatusLiveData
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import sfotakos.itos.ApodDateUtils.stringToDate
+import sfotakos.itos.ApodDateUtils.calendarToString
+import sfotakos.itos.ApodDateUtils.earliestApiDateCalendar
+import sfotakos.itos.ApodDateUtils.gmtCalendar
+import sfotakos.itos.ApodDateUtils.nextDay
+import sfotakos.itos.ApodDateUtils.previousDay
 import sfotakos.itos.BuildConfig
 import sfotakos.itos.data.repositories.db.ContinuityDb
 import java.io.IOException
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
 
@@ -20,8 +24,6 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
 
     //TODO get context into this class to get from strings.xml
     companion object {
-        const val YESTERDAY = -1
-        const val TOMORROW = 1
         const val INTERNAL_SERVER_ERROR = 500
         const val TEMP_ERROR_MSG = "There was a rip in time space, we'll try mending it."
         const val ERROR_CODE_FORMAT = " (%d)"
@@ -40,39 +42,30 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
 
     override fun onZeroItemsLoaded() {
         super.onZeroItemsLoaded()
-        val calendar = Calendar.getInstance()
+        val calendar = gmtCalendar()
         initialKey?.let {
-            calendar.time =
-            SimpleDateFormat(APODService.QUERY_DATE_FORMAT, Locale.ENGLISH)
-                .parse(initialKey)
+            calendar.time = stringToDate(initialKey!!)
         }
         fetchApods(calendar, PagingRequestHelper.RequestType.INITIAL)
     }
 
     override fun onItemAtFrontLoaded(itemAtFront: APOD) {
         super.onItemAtFrontLoaded(itemAtFront)
-        val calendar = Calendar.getInstance()
-        calendar.time =
-            SimpleDateFormat(APODService.QUERY_DATE_FORMAT, Locale.ENGLISH)
-                .parse(itemAtFront.date)
-        getNextDay(calendar)
-        if (calendar < Calendar.getInstance()) {
+        val calendar = gmtCalendar()
+        calendar.time = stringToDate(itemAtFront.date)
+        nextDay(calendar)
+        if (calendar < gmtCalendar()) {
             fetchApods(calendar, PagingRequestHelper.RequestType.BEFORE)
         }
     }
 
     override fun onItemAtEndLoaded(itemAtEnd: APOD) {
         super.onItemAtEndLoaded(itemAtEnd)
-        val minDateCalendar = Calendar.getInstance()
-        minDateCalendar.set(Calendar.YEAR, 1995)
-        minDateCalendar.set(Calendar.MONTH, Calendar.JUNE)
-        minDateCalendar.set(Calendar.DAY_OF_MONTH, 16)
-        val calendar = Calendar.getInstance()
-        calendar.time =
-            SimpleDateFormat(APODService.QUERY_DATE_FORMAT, Locale.ENGLISH)
-                .parse(itemAtEnd.date)
-        if (calendar >= minDateCalendar) {
-            fetchApods(getPreviousDay(calendar), PagingRequestHelper.RequestType.AFTER)
+        val earliestDateCalendar = earliestApiDateCalendar()
+        val calendar = gmtCalendar()
+        calendar.time = stringToDate(itemAtEnd.date)
+        if (calendar >= earliestDateCalendar) {
+            fetchApods(previousDay(calendar), PagingRequestHelper.RequestType.AFTER)
         }
     }
 
@@ -80,12 +73,12 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
     private fun fetchApods(calendar: Calendar, requestType: PagingRequestHelper.RequestType) {
         helper.runIfNotRunning(requestType) {
             Executors.newSingleThreadExecutor().execute {
-                val apod: APOD? = apodDb.apodDao().queryByDate(getDateString(calendar))
+                val apod: APOD? = apodDb.apodDao().queryByDate(calendarToString(calendar))
                 if (apod != null) {
                     onSuccessfulFetch(apod, it)
                 } else {
                     APODService.createService()
-                        .getApodByDate(BuildConfig.NASA_KEY, getDateString(calendar))
+                        .getApodByDate(BuildConfig.NASA_KEY, calendarToString(calendar))
                         .enqueue(createWebserviceCallback(it, requestType))
                 }
             }
@@ -127,13 +120,11 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                         INTERNAL_SERVER_ERROR -> {
                             val date = call.request().url().queryParameter("date")
                             if (date != null) {
-                                var calendar = Calendar.getInstance()
-                                calendar.time =
-                                    SimpleDateFormat(APODService.QUERY_DATE_FORMAT, Locale.ENGLISH)
-                                        .parse(date)
+                                var calendar = gmtCalendar()
+                                calendar.time = stringToDate(date)
                                 calendar = when (requestType) {
-                                    PagingRequestHelper.RequestType.BEFORE -> getNextDay(calendar)
-                                    PagingRequestHelper.RequestType.AFTER -> getPreviousDay(calendar)
+                                    PagingRequestHelper.RequestType.BEFORE -> nextDay(calendar)
+                                    PagingRequestHelper.RequestType.AFTER -> previousDay(calendar)
                                     else -> {
                                         recordFailure(
                                             it,
@@ -170,21 +161,5 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
 
     private fun recordFailure(it: PagingRequestHelper.Request.Callback, error: String) {
         it.recordFailure(Throwable(error))
-    }
-
-    private fun getPreviousDay(calendar: Calendar): Calendar {
-        calendar.add(Calendar.DATE, YESTERDAY)
-        return calendar
-    }
-
-    private fun getNextDay(calendar: Calendar): Calendar {
-        calendar.add(Calendar.DATE, TOMORROW)
-        return calendar
-    }
-
-    @SuppressLint("SimpleDateFormat")
-    private fun getDateString(calendar: Calendar): String {
-        val dateFormat = SimpleDateFormat(APODService.QUERY_DATE_FORMAT)
-        return dateFormat.format(calendar.time)
     }
 }

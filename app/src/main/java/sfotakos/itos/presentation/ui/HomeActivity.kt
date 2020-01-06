@@ -19,6 +19,7 @@ import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
+import sfotakos.itos.ApodDateUtils
 import sfotakos.itos.data.entities.APOD
 import sfotakos.itos.data.repositories.db.ApodDb
 import sfotakos.itos.data.repositories.db.ContinuityDb
@@ -26,7 +27,6 @@ import sfotakos.itos.network.ConnectionLiveData
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_ARG
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_IMAGE_TRANSITION_NAME
 import java.util.*
-import java.util.Calendar.JUNE
 import sfotakos.itos.R
 
 class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
@@ -36,7 +36,7 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
     private lateinit var connectionLiveData: ConnectionLiveData
     private lateinit var viewModel: ApodViewModel
 
-    private val selectionCalendar = Calendar.getInstance()
+    private val selectionCalendar = ApodDateUtils.gmtCalendar()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,12 +78,9 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
                     selectionCalendar.get(Calendar.MONTH),
                     selectionCalendar.get(Calendar.DAY_OF_MONTH)
                 )
-                val minDateCalendar = Calendar.getInstance()
-                minDateCalendar.set(Calendar.YEAR, 1995)
-                minDateCalendar.set(Calendar.MONTH, JUNE)
-                minDateCalendar.set(Calendar.DAY_OF_MONTH, 16)
-                datePickerDialog.datePicker.maxDate = Calendar.getInstance().timeInMillis
-                datePickerDialog.datePicker.minDate = minDateCalendar.timeInMillis
+                val earliestDateCalendar = ApodDateUtils.earliestApiDateCalendar()
+                datePickerDialog.datePicker.maxDate = ApodDateUtils.gmtCalendar().timeInMillis
+                datePickerDialog.datePicker.minDate = earliestDateCalendar.timeInMillis
                 datePickerDialog.show()
                 true
             }
