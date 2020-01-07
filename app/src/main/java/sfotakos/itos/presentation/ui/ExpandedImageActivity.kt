@@ -4,9 +4,14 @@ import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.animation.Animator
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -16,11 +21,6 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import kotlinx.android.synthetic.main.activity_expanded_image.*
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
-import android.net.Uri
-import android.widget.Toast
 import sfotakos.itos.BuildConfig
 import sfotakos.itos.R
 import sfotakos.itos.data.FileUtils.addImageToGallery
@@ -39,23 +39,27 @@ class ExpandedImageActivity : AppCompatActivity() {
         const val APOD_ARG = "ApodArgument"
         const val REQUEST_WRITE_STORAGE_REQUEST_CODE_SAVE = 7891
         const val REQUEST_WRITE_STORAGE_REQUEST_CODE_SHARE = 7892
-        const val DOUBLE_CLICK_DELAY : Long = 300
+        const val DOUBLE_CLICK_DELAY: Long = 300
     }
 
     lateinit var requestPermissionCallback: () -> Unit
     lateinit var shareImageCallback: () -> Unit
-    lateinit var apod : APOD
+    lateinit var apod: APOD
 
     private val requestListener = object : RequestListener<Drawable> {
-        override fun onLoadFailed(e: GlideException?, model: Any?, target: Target<Drawable>?,
-            isFirstResource: Boolean): Boolean {
+        override fun onLoadFailed(
+            e: GlideException?, model: Any?, target: Target<Drawable>?,
+            isFirstResource: Boolean
+        ): Boolean {
             //TODO log error maybe retry
             supportStartPostponedEnterTransition()
             return false
         }
 
-        override fun onResourceReady(resource: Drawable?, model: Any?, target: Target<Drawable>?,
-            dataSource: DataSource?, isFirstResource: Boolean): Boolean {
+        override fun onResourceReady(
+            resource: Drawable?, model: Any?, target: Target<Drawable>?,
+            dataSource: DataSource?, isFirstResource: Boolean
+        ): Boolean {
 
             supportStartPostponedEnterTransition()
             resource?.let { drawable ->
@@ -73,11 +77,16 @@ class ExpandedImageActivity : AppCompatActivity() {
                             }
                             saveImage.isClickable = true
                         }
+
                         override fun onAnimationStart(animation: Animator?) {
                             saveImage.isClickable = false
                         }
-                        override fun onAnimationEnd(animation: Animator?) {/*unused*/}
-                        override fun onAnimationCancel(animation: Animator?) {/*unused*/}
+
+                        override fun onAnimationEnd(animation: Animator?) {/*unused*/
+                        }
+
+                        override fun onAnimationCancel(animation: Animator?) {/*unused*/
+                        }
                     })
                     saveImage.playAnimation()
                     imagePath = saveImageToGallery(
@@ -101,12 +110,14 @@ class ExpandedImageActivity : AppCompatActivity() {
                         val copyrightText =
                             if (apod.copyright != null) " captured by " + apod.copyright
                             else " as seen"
-                        shareIntent.putExtra(Intent.EXTRA_TEXT,
+                        shareIntent.putExtra(
+                            Intent.EXTRA_TEXT,
                             apod.title + copyrightText +
                                     " on " + apod.date +
                                     "\nYou can see more by downloading our app " +
                                     "https://play.google.com/store/apps/details?id=" +
-                                    BuildConfig.APPLICATION_ID)
+                                    BuildConfig.APPLICATION_ID
+                        )
                         startActivity(Intent.createChooser(shareIntent, "Share with..."))
                         Timer("AvoidDoubleClick", false).schedule(DOUBLE_CLICK_DELAY) {
                             shareApod.isClickable = true
@@ -167,7 +178,7 @@ class ExpandedImageActivity : AppCompatActivity() {
     }
 
     fun saveImageToGallery(bitmap: Bitmap, title: String, description: String, date: String): Uri? {
-        val storedImagePath : File = generateImagePath(title, date)
+        val storedImagePath: File = generateImagePath(title, date)
         if (checkIfFileExists(storedImagePath)) {
             return Uri.parse(storedImagePath.path)
         }
@@ -207,17 +218,18 @@ class ExpandedImageActivity : AppCompatActivity() {
 
     private fun hasWritePermissions(): Boolean {
         return ContextCompat.checkSelfPermission(
-            baseContext, WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            baseContext, WRITE_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     fun drawableToBitmap(drawable: Drawable): Bitmap {
         check(!(drawable.intrinsicWidth <= 0 || drawable.intrinsicHeight <= 0))
 
         val bitmap: Bitmap = Bitmap.createBitmap(
-                drawable.intrinsicWidth,
-                drawable.intrinsicHeight,
-                Bitmap.Config.ARGB_8888
-            )
+            drawable.intrinsicWidth,
+            drawable.intrinsicHeight,
+            Bitmap.Config.ARGB_8888
+        )
 
         if (drawable is BitmapDrawable && drawable.bitmap != null) {
             return drawable.bitmap

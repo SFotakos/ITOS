@@ -6,7 +6,6 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import sfotakos.itos.data.entities.APOD
 
-
 @Database(
     entities = [APOD::class],
     version = 1,
@@ -15,7 +14,8 @@ import sfotakos.itos.data.entities.APOD
 abstract class ContinuityDb : RoomDatabase() {
     companion object {
         fun create(context: Context): ContinuityDb {
-            val databaseBuilder = Room.databaseBuilder(context, ContinuityDb::class.java, "continuity.db")
+            val databaseBuilder =
+                Room.databaseBuilder(context, ContinuityDb::class.java, "continuity.db")
             return databaseBuilder.build()
         }
     }

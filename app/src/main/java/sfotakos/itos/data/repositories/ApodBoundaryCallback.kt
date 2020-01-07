@@ -2,25 +2,26 @@ package sfotakos.itos.data.repositories
 
 import androidx.paging.PagedList
 import androidx.paging.PagingRequestHelper
-import sfotakos.itos.data.entities.APOD
-import sfotakos.itos.data.repositories.db.ApodDb
-import sfotakos.itos.network.createStatusLiveData
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import sfotakos.itos.ApodDateUtils.stringToDate
 import sfotakos.itos.ApodDateUtils.calendarToString
 import sfotakos.itos.ApodDateUtils.earliestApiDateCalendar
 import sfotakos.itos.ApodDateUtils.gmtCalendar
 import sfotakos.itos.ApodDateUtils.nextDay
 import sfotakos.itos.ApodDateUtils.previousDay
+import sfotakos.itos.ApodDateUtils.stringToDate
 import sfotakos.itos.BuildConfig
+import sfotakos.itos.data.entities.APOD
+import sfotakos.itos.data.repositories.db.ApodDb
 import sfotakos.itos.data.repositories.db.ContinuityDb
+import sfotakos.itos.network.createStatusLiveData
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.Executors
 
-class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb: ContinuityDb) : PagedList.BoundaryCallback<APOD>() {
+class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb: ContinuityDb) :
+    PagedList.BoundaryCallback<APOD>() {
 
     //TODO get context into this class to get from strings.xml
     companion object {
@@ -32,7 +33,7 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
     private var initialKey: String? = null
 
     //This is so we can recycle this class instead of creating a new one every time the initial key changes
-    fun setInitialKey(key: String?){
+    fun setInitialKey(key: String?) {
         initialKey = key
     }
 
@@ -85,7 +86,10 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
         }
     }
 
-    private fun createWebserviceCallback(it: PagingRequestHelper.Request.Callback, requestType: PagingRequestHelper.RequestType)
+    private fun createWebserviceCallback(
+        it: PagingRequestHelper.Request.Callback,
+        requestType: PagingRequestHelper.RequestType
+    )
             : Callback<APOD> {
         return object : Callback<APOD> {
             override fun onFailure(
@@ -93,10 +97,14 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                 t: Throwable
             ) {
                 when (t) {
-                    is IOException -> recordFailure(it,
-                        "Planet tracking was lost, retrieving connection...")
-                    else -> recordFailure(it,
-                        TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(-1))
+                    is IOException -> recordFailure(
+                        it,
+                        "Planet tracking was lost, retrieving connection..."
+                    )
+                    else -> recordFailure(
+                        it,
+                        TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(-1)
+                    )
                 }
             }
 
@@ -111,12 +119,14 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                             onSuccessfulFetch(apod, it)
                         }
                     } else {
-                        recordFailure(it,
-                            TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(-200))
+                        recordFailure(
+                            it,
+                            TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(-200)
+                        )
                     }
                 } else {
                     //TODO gracefully deal with INTERNAL_SERVER_ERROR
-                    when(response.code()) {
+                    when (response.code()) {
                         INTERNAL_SERVER_ERROR -> {
                             val date = call.request().url().queryParameter("date")
                             if (date != null) {
@@ -145,15 +155,20 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                                 )
                             }
                         }
-                        else -> recordFailure(it,
-                            TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(response.code()))
+                        else -> recordFailure(
+                            it,
+                            TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(response.code())
+                        )
                     }
                 }
             }
         }
     }
 
-    private fun onSuccessfulFetch(apod: APOD, requestCallback: PagingRequestHelper.Request.Callback){
+    private fun onSuccessfulFetch(
+        apod: APOD,
+        requestCallback: PagingRequestHelper.Request.Callback
+    ) {
         continuityDb.apodDao().insertApod(apod)
         apodDb.apodDao().insertApod(apod)
         requestCallback.recordSuccess()

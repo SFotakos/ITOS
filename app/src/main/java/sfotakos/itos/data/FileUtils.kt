@@ -1,25 +1,27 @@
 package sfotakos.itos.data
 
-import java.io.File
+import android.content.ContentResolver
+import android.content.ContentValues
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Environment.DIRECTORY_PICTURES
 import android.os.Environment.getExternalStoragePublicDirectory
+import android.provider.MediaStore
 import android.util.Log
-import android.graphics.Bitmap
+import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import android.provider.MediaStore
-import android.content.ContentValues
-import android.content.ContentResolver
-import android.net.Uri
 
 
 object FileUtils {
     private const val IMAGE_DIR = "ITOS"
 
-    private fun getImagesDirectory() : File {
+    private fun getImagesDirectory(): File {
         val file =
-            File(getExternalStoragePublicDirectory(DIRECTORY_PICTURES).toString() +
-                    File.separator + IMAGE_DIR)
+            File(
+                getExternalStoragePublicDirectory(DIRECTORY_PICTURES).toString() +
+                        File.separator + IMAGE_DIR
+            )
         if (!file.mkdirs() && !file.isDirectory) {
             //TODO log error
             Log.d("mkdir", "Directory not created")
@@ -27,7 +29,7 @@ object FileUtils {
         return file
     }
 
-    fun checkIfFileExists(file: File) : Boolean {
+    fun checkIfFileExists(file: File): Boolean {
         return file.exists()
     }
 
@@ -52,7 +54,13 @@ object FileUtils {
         return result
     }
 
-    fun addImageToGallery(cr: ContentResolver, title: String, description: String, date: String, filepath: File): Uri? {
+    fun addImageToGallery(
+        cr: ContentResolver,
+        title: String,
+        description: String,
+        date: String,
+        filepath: File
+    ): Uri? {
         val values = ContentValues()
         values.put(MediaStore.Images.Media.TITLE, title)
         values.put(MediaStore.Images.Media.DISPLAY_NAME, title)

@@ -13,10 +13,10 @@ object ApodDateUtils {
     private const val YESTERDAY = -1
     private const val TOMORROW = 1
 
-    private var earliestDateCalendar : Calendar? = null
+    private var earliestDateCalendar: Calendar? = null
     private val gmtCalendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
 
-    fun gmtCalendar() : Calendar {
+    fun gmtCalendar(): Calendar {
         return gmtCalendar?.clone() as Calendar
     }
 
@@ -24,8 +24,8 @@ object ApodDateUtils {
      * Sets the earliest date the APOD API has a valid response into a Calendar
      *
      * @return A calendar of the date June 16, 1995
-    */
-    fun earliestApiDateCalendar() : Calendar {
+     */
+    fun earliestApiDateCalendar(): Calendar {
         if (earliestDateCalendar == null) {
             val calendar = gmtCalendar()
             calendar.set(Calendar.YEAR, 1995)
@@ -102,7 +102,7 @@ object ApodDateUtils {
     @SuppressLint("SimpleDateFormat")
     fun localizedDateString(date: String): String {
         val apiDateFormat = SimpleDateFormat(QUERY_DATE_FORMAT)
-        val formattedDate : Date?
+        val formattedDate: Date?
         return try {
             formattedDate = apiDateFormat.parse(date)
             val finalDateFormat = DateFormat.getDateInstance(DateFormat.SHORT, Locale.getDefault())

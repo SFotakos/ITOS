@@ -13,5 +13,4 @@ class ScalingUtil {
             return pixels / (context.resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT)
         }
     }
-
 }

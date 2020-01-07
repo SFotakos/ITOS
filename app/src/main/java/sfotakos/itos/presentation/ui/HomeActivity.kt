@@ -16,12 +16,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.paging.PagedList
-import androidx.paging.PagingRequestHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
 import sfotakos.itos.ApodDateUtils
 import sfotakos.itos.ApodDateUtils.earliestApiDateCalendar
+import sfotakos.itos.R
 import sfotakos.itos.data.entities.APOD
 import sfotakos.itos.data.repositories.db.ApodDb
 import sfotakos.itos.data.repositories.db.ContinuityDb
@@ -29,7 +29,6 @@ import sfotakos.itos.network.ConnectionLiveData
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_ARG
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_IMAGE_TRANSITION_NAME
 import java.util.*
-import sfotakos.itos.R
 
 class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 

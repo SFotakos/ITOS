@@ -1,10 +1,10 @@
 package sfotakos.itos.presentation.ui
 
-import androidx.recyclerview.widget.RecyclerView
-import android.graphics.drawable.Drawable
 import android.graphics.Canvas
 import android.graphics.Rect
+import android.graphics.drawable.Drawable
 import android.view.View
+import androidx.recyclerview.widget.RecyclerView
 
 class ApodItemDecoration(private val divider: Drawable) : RecyclerView.ItemDecoration() {
 

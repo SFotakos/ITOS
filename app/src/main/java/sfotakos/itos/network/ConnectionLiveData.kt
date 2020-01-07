@@ -8,7 +8,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.*
 import android.os.Build
-import android.util.Log
 import androidx.lifecycle.LiveData
 
 class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
@@ -61,7 +60,7 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
             connectivityManagerCallback = object : ConnectivityManager.NetworkCallback() {
-                var previousDownstreamBandwidth : Int = 0
+                var previousDownstreamBandwidth: Int = 0
                 override fun onAvailable(network: Network?) {
                     postValue(true)
                 }

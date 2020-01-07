@@ -16,7 +16,8 @@ import sfotakos.itos.network.ResponseWrapper
 import java.util.*
 import kotlin.concurrent.thread
 
-class ApodViewModel(private val apodDb: ApodDb, private val continuityDb: ContinuityDb) : ViewModel() {
+class ApodViewModel(private val apodDb: ApodDb, private val continuityDb: ContinuityDb) :
+    ViewModel() {
 
     companion object {
         const val INITIAL_LOAD_SIZE = 50

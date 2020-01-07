@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName
 import java.io.Serializable
 
 @Entity
-data class APOD (
+data class APOD(
     @SerializedName("copyright") val copyright: String?,
     @PrimaryKey @SerializedName("date") val date: String,
     @SerializedName("explanation") val explanation: String,

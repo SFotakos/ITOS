@@ -21,7 +21,7 @@ import com.airbnb.lottie.LottieAnimationView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.bumptech.glide.request.target.*
+import com.bumptech.glide.request.target.DrawableImageViewTarget
 import com.bumptech.glide.request.transition.Transition
 import kotlinx.android.synthetic.main.item_apod.view.*
 import sfotakos.itos.ApodDateUtils.localizedDateString
@@ -237,7 +237,8 @@ class ApodAdapter(
             layoutParams.width = ScalingUtil.dpToPixel(context, LOADING_MIN_SIZE).roundToInt()
             itemView.apodPicture_imageView.layoutParams = layoutParams
             itemView.apodPicture_imageView.setImageDrawable(
-                ContextCompat.getDrawable(context, R.drawable.ic_destroyed_planet))
+                ContextCompat.getDrawable(context, R.drawable.ic_destroyed_planet)
+            )
             itemView.apodPicture_imageView.isClickable = false
             super.onLoadFailed(errorDrawable)
         }
