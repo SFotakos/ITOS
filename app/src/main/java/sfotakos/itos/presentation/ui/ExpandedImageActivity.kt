@@ -29,8 +29,6 @@ import sfotakos.itos.data.FileUtils.compressAndSaveImage
 import sfotakos.itos.data.FileUtils.generateImagePath
 import sfotakos.itos.data.entities.APOD
 import java.io.File
-import java.util.*
-import kotlin.concurrent.schedule
 
 class ExpandedImageActivity : AppCompatActivity() {
 
@@ -119,9 +117,6 @@ class ExpandedImageActivity : AppCompatActivity() {
                                     BuildConfig.APPLICATION_ID
                         )
                         startActivity(Intent.createChooser(shareIntent, "Share with..."))
-                        Timer("AvoidDoubleClick", false).schedule(DOUBLE_CLICK_DELAY) {
-                            shareApod.isClickable = true
-                        }
                     } else {
                         Toast.makeText(
                             this@ExpandedImageActivity,
@@ -175,6 +170,12 @@ class ExpandedImageActivity : AppCompatActivity() {
         closeDialog.setOnClickListener {
             super.onBackPressed()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // IntentChooser listener doesn't listen to cancel and back, this enables the button (double click prevention)
+        shareApod.isClickable = true
     }
 
     fun saveImageToGallery(bitmap: Bitmap, title: String, description: String, date: String): Uri? {
