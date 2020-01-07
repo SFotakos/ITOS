@@ -1,4 +1,5 @@
 # Built application files
+output.json
 *.apk
 *.ap_
 
