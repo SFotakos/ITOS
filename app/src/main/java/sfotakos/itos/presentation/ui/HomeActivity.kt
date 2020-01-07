@@ -85,7 +85,7 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
                     selectionCalendar.get(Calendar.MONTH),
                     selectionCalendar.get(Calendar.DAY_OF_MONTH)
                 )
-                val earliestDateCalendar = ApodDateUtils.earliestApiDateCalendar()
+                val earliestDateCalendar = earliestApiDateCalendar()
                 datePickerDialog.datePicker.maxDate = ApodDateUtils.gmtCalendar().timeInMillis
                 datePickerDialog.datePicker.minDate = earliestDateCalendar.timeInMillis
                 datePickerDialog.show()
@@ -109,12 +109,6 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
             }
         })
     }
-
-    //TODO add attributions to onOptionsItemSelected
-    //https://www.flaticon.com/free-icon/asteroid_2229768
-    //https://www.fontspace.com/c%C3%A9-al/space-galaxy
-    //https://www.fontspace.com/heaven-castro/izayoi-monospaced
-    //https://www.flaticon.com/free-icon/galaxy_124567
 
     private fun initializeList() {
         apod_recyclerView.layoutManager = LinearLayoutManager(this)

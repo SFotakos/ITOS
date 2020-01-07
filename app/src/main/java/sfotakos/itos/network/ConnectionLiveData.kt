@@ -1,5 +1,6 @@
 package sfotakos.itos.network
 
+import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -17,6 +18,7 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
 
     private lateinit var connectivityManagerCallback: ConnectivityManager.NetworkCallback
 
+    @SuppressLint("ObsoleteSdkInt")
     override fun onActive() {
         super.onActive()
         updateConnection()
@@ -48,8 +50,8 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private fun lollipopNetworkAvailableRequest() {
         val builder = NetworkRequest.Builder()
-            .addTransportType(android.net.NetworkCapabilities.TRANSPORT_CELLULAR)
-            .addTransportType(android.net.NetworkCapabilities.TRANSPORT_WIFI)
+            .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
         connectivityManager.registerNetworkCallback(
             builder.build(),
             getConnectivityManagerCallback()

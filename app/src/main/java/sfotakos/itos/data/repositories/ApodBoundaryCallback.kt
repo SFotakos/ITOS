@@ -125,7 +125,6 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                         )
                     }
                 } else {
-                    //TODO gracefully deal with INTERNAL_SERVER_ERROR
                     when (response.code()) {
                         INTERNAL_SERVER_ERROR -> {
                             val date = call.request().url().queryParameter("date")

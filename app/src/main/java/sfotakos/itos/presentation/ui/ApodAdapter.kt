@@ -50,7 +50,6 @@ class ApodAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            //TODO justifiedText not working on lower API levels
             R.layout.item_apod -> {
                 ApodViewHolder(
                     LayoutInflater.from(parent.context)

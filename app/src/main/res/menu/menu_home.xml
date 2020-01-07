@@ -9,7 +9,7 @@
           android:orderInCategory="200"
           android:layout_width="24dp"
           android:layout_height="24dp"
-          app:showAsAction="always"/>
+          app:showAsAction="ifRoom"/>
     <item android:id="@+id/action_home_menu_calendar"
             android:title="@string/action_home_menu_calendar"
             android:icon="@drawable/ic_calendar_white_24dp"
