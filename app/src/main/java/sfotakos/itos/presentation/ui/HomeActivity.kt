@@ -68,16 +68,21 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_home_menu_calendar -> {
+                val earliestDateCalendar = earliestApiDateCalendar()
+                val offsetTodayCalendar = gmtCalendar()
                 val dateSetListener: DatePickerDialog.OnDateSetListener? =
                     DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
-                        val earliestDateCalendar = earliestApiDateCalendar()
                         selectionCalendar.set(Calendar.YEAR, year)
                         selectionCalendar.set(Calendar.MONTH, month)
                         selectionCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
-                        // Selecting a day from a month before the limit,
-                        // and then changing the year enables selecting a disabled date in the picker
+
+                        // Selecting a day before or after the limit in a year different from
+                        // the limit itself, and then switching to said year,
+                        // makes the date exceed the limit
                         if (selectionCalendar < earliestDateCalendar) {
                             selectionCalendar.time = earliestDateCalendar.time
+                        } else if (selectionCalendar > offsetTodayCalendar) {
+                            selectionCalendar.time = offsetTodayCalendar.time
                         }
                         fetchApodByDate(selectionCalendar.time)
                     }
@@ -88,9 +93,9 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
                     selectionCalendar.get(Calendar.DAY_OF_MONTH)
                 )
                 datePickerDialog.datePicker.maxDate =
-                    zonedTimeInMillis(gmtCalendar(), true)
+                    zonedTimeInMillis(offsetTodayCalendar, true)
                 datePickerDialog.datePicker.minDate =
-                    zonedTimeInMillis(earliestApiDateCalendar(), true)
+                    zonedTimeInMillis(earliestDateCalendar, true)
                 datePickerDialog.show()
                 true
             }
