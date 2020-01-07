@@ -14,7 +14,7 @@ object ApodDateUtils {
     private const val TOMORROW = 1
 
     private var earliestDateCalendar: Calendar? = null
-    private val gmtCalendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
+    private val gmtCalendar = Calendar.getInstance(TimeZone.getTimeZone("GMT-7"))
 
     fun gmtCalendar(): Calendar {
         return gmtCalendar?.clone() as Calendar
@@ -112,4 +112,16 @@ object ApodDateUtils {
         }
     }
 
+    /**
+     * Returns time from Epoch respecting the calendar's timezone.
+     *
+     * @param calendar Calendar from which to extract the timezone
+     * @return the current time as UTC milliseconds from the epoch offset by raw TimeZone.
+     */
+    fun zonedTimeInMillis(calendar: Calendar, ignoreDaylightSavings: Boolean): Long {
+        val offset =
+            if (ignoreDaylightSavings) calendar.timeZone.rawOffset
+            else calendar.timeZone.getOffset(calendar.timeInMillis)
+        return calendar.timeInMillis + offset
+    }
 }

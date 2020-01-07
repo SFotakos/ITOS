@@ -21,6 +21,8 @@ import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
 import sfotakos.itos.ApodDateUtils
 import sfotakos.itos.ApodDateUtils.earliestApiDateCalendar
+import sfotakos.itos.ApodDateUtils.gmtCalendar
+import sfotakos.itos.ApodDateUtils.zonedTimeInMillis
 import sfotakos.itos.R
 import sfotakos.itos.data.entities.APOD
 import sfotakos.itos.data.repositories.db.ApodDb
@@ -85,9 +87,10 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
                     selectionCalendar.get(Calendar.MONTH),
                     selectionCalendar.get(Calendar.DAY_OF_MONTH)
                 )
-                val earliestDateCalendar = earliestApiDateCalendar()
-                datePickerDialog.datePicker.maxDate = ApodDateUtils.gmtCalendar().timeInMillis
-                datePickerDialog.datePicker.minDate = earliestDateCalendar.timeInMillis
+                datePickerDialog.datePicker.maxDate =
+                    zonedTimeInMillis(gmtCalendar(), true)
+                datePickerDialog.datePicker.minDate =
+                    zonedTimeInMillis(earliestApiDateCalendar(), true)
                 datePickerDialog.show()
                 true
             }
