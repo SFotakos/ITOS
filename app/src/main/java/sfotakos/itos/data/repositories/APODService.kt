@@ -17,12 +17,14 @@ interface APODService {
 
     @GET("planetary/apod")
     fun getApodByDate(
-        @Query("api_key") apiKey: String,
-        @Query("date") date: String
+        @Query(API_QUERY_PARAM) apiKey: String,
+        @Query(DATE_QUERY_PARAM) date: String
     ): Call<APOD>
 
     companion object {
         private const val BASE_URL = "https://api.nasa.gov/"
+        const val API_QUERY_PARAM = "api_key"
+        const val DATE_QUERY_PARAM = "date"
 
         fun createService(): APODService {
             return Retrofit.Builder()

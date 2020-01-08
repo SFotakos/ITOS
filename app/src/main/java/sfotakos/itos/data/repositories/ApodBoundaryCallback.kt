@@ -2,6 +2,10 @@ package sfotakos.itos.data.repositories
 
 import androidx.paging.PagedList
 import androidx.paging.PagingRequestHelper
+import com.crashlytics.android.Crashlytics
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+import com.google.gson.JsonIOException
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -13,10 +17,13 @@ import sfotakos.itos.ApodDateUtils.previousDay
 import sfotakos.itos.ApodDateUtils.stringToDate
 import sfotakos.itos.BuildConfig
 import sfotakos.itos.data.entities.APOD
+import sfotakos.itos.data.repositories.APODService.Companion.DATE_QUERY_PARAM
 import sfotakos.itos.data.repositories.db.ApodDb
 import sfotakos.itos.data.repositories.db.ContinuityDb
 import sfotakos.itos.network.createStatusLiveData
 import java.io.IOException
+import java.lang.Exception
+import java.lang.IllegalStateException
 import java.util.*
 import java.util.concurrent.Executors
 
@@ -26,11 +33,38 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
     //TODO get context into this class to get from strings.xml
     companion object {
         const val INTERNAL_SERVER_ERROR = 500
-        const val TEMP_ERROR_MSG = "There was a rip in time space, we'll try mending it."
-        const val ERROR_CODE_FORMAT = " (%d)"
+        const val CONNECTION_ERROR_CODE = -1
+        const val PARSING_ERROR_CODE = -2
+        const val INVALID_REQUEST_TYPE_ERROR_CODE = -3
+        const val INVALID_DATE_STATE_ERROR_CODE = -4
+        const val SUCCESS_NULL_BODY_ERROR_CODE = -200
+        private const val ERROR_MSG = "There was a rip in time space, we'll try mending it."
+        private const val CODE_FORMAT = " (%d)"
+        const val CONNECTION_ERROR_MSG = "Planet tracking was lost, retrieving connection..."
+        const val FORMATTED_ERROR_MSG = ERROR_MSG + CODE_FORMAT
+        const val CRASHLYTICS_ERROR_MSG = "Error fetching APOD" +
+                "\nDate: %s" +
+                "\nErrorMessage: %s" +
+                "\nHttpCode:$CODE_FORMAT"
+    }
+
+    //TODO proper remoteconfig handling
+    //TODO add custom key to crashlytics
+    init {
+        val firebaseRemoteConfig = FirebaseRemoteConfig.getInstance()
+        val configSettings = FirebaseRemoteConfigSettings.Builder()
+            .setMinimumFetchIntervalInSeconds(3600)
+            .build()
+        firebaseRemoteConfig.setConfigSettingsAsync(configSettings)
+        firebaseRemoteConfig.fetch().addOnCompleteListener {
+            if (it.isSuccessful) {
+                shouldLogHttp = firebaseRemoteConfig.getBoolean("log_http_connection")
+            }
+        }
     }
 
     private var initialKey: String? = null
+    private var shouldLogHttp = false
 
     //This is so we can recycle this class instead of creating a new one every time the initial key changes
     fun setInitialKey(key: String?) {
@@ -97,14 +131,36 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                 t: Throwable
             ) {
                 when (t) {
-                    is IOException -> recordFailure(
-                        it,
-                        "Planet tracking was lost, retrieving connection..."
-                    )
-                    else -> recordFailure(
-                        it,
-                        TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(-1)
-                    )
+                    is IOException -> {
+                        recordFailure(
+                            it,
+                            CONNECTION_ERROR_MSG
+                        )
+                        logToCrashlytics(
+                            IOException(
+                                CRASHLYTICS_ERROR_MSG.format(
+                                    getDateParam(call),
+                                    t.cause,
+                                    CONNECTION_ERROR_CODE
+                                )
+                            )
+                        )
+                    }
+                    else -> {
+                        recordFailure(
+                            it,
+                            FORMATTED_ERROR_MSG.format(PARSING_ERROR_CODE)
+                        )
+                        logToCrashlytics(
+                            JsonIOException(
+                                CRASHLYTICS_ERROR_MSG.format(
+                                    getDateParam(call),
+                                    t.cause,
+                                    PARSING_ERROR_CODE
+                                )
+                            )
+                        )
+                    }
                 }
             }
 
@@ -121,13 +177,22 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                     } else {
                         recordFailure(
                             it,
-                            TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(-200)
+                            FORMATTED_ERROR_MSG.format(SUCCESS_NULL_BODY_ERROR_CODE)
+                        )
+                        logToCrashlytics(
+                            IllegalStateException(
+                                CRASHLYTICS_ERROR_MSG.format(
+                                    getDateParam(call),
+                                    "Successful response but null APOD",
+                                    SUCCESS_NULL_BODY_ERROR_CODE
+                                )
+                            )
                         )
                     }
                 } else {
                     when (response.code()) {
                         INTERNAL_SERVER_ERROR -> {
-                            val date = call.request().url().queryParameter("date")
+                            val date = getDateParam(call)
                             if (date != null) {
                                 var calendar = gmtCalendar()
                                 calendar.time = stringToDate(date)
@@ -137,27 +202,68 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                                     else -> {
                                         recordFailure(
                                             it,
-                                            TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(response.code())
+                                            FORMATTED_ERROR_MSG.format(INVALID_REQUEST_TYPE_ERROR_CODE)
+                                        )
+                                        logToCrashlytics(
+                                            IllegalStateException(
+                                                CRASHLYTICS_ERROR_MSG.format(
+                                                    getDateParam(call),
+                                                    "RequestType wasn't BEFORE nor AFTER",
+                                                    INVALID_REQUEST_TYPE_ERROR_CODE
+                                                )
+                                            )
                                         )
                                         return
                                     }
                                 }
+                                // Need to record failure before retrying due to runIfNotRunning
                                 recordFailure(
                                     it,
-                                    TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(response.code())
+                                    FORMATTED_ERROR_MSG.format(response.code())
                                 )
+                                if (shouldLogHttp) {
+                                    logToCrashlytics(
+                                        IOException(
+                                            CRASHLYTICS_ERROR_MSG.format(
+                                                getDateParam(call),
+                                                response.errorBody(),
+                                                response.code()
+                                            )
+                                        )
+                                    )
+                                }
                                 fetchApods(calendar, requestType)
                             } else {
                                 recordFailure(
                                     it,
-                                    TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(response.code())
+                                    FORMATTED_ERROR_MSG.format(INVALID_DATE_STATE_ERROR_CODE)
+                                )
+                                logToCrashlytics(
+                                    IllegalStateException(
+                                        CRASHLYTICS_ERROR_MSG.format(
+                                            getDateParam(call),
+                                            "Date shouldn't ever be null here",
+                                            INVALID_DATE_STATE_ERROR_CODE
+                                        )
+                                    )
                                 )
                             }
                         }
-                        else -> recordFailure(
-                            it,
-                            TEMP_ERROR_MSG + ERROR_CODE_FORMAT.format(response.code())
-                        )
+                        else -> {
+                            recordFailure(
+                                it,
+                                FORMATTED_ERROR_MSG.format(response.code())
+                            )
+                            logToCrashlytics(
+                                IOException(
+                                    CRASHLYTICS_ERROR_MSG.format(
+                                        getDateParam(call),
+                                        response.errorBody(),
+                                        response.code()
+                                    )
+                                )
+                            )
+                        }
                     }
                 }
             }
@@ -173,7 +279,18 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
         requestCallback.recordSuccess()
     }
 
-    private fun recordFailure(it: PagingRequestHelper.Request.Callback, error: String) {
+    private fun recordFailure(
+        it: PagingRequestHelper.Request.Callback,
+        error: String
+    ) {
         it.recordFailure(Throwable(error))
+    }
+
+    private fun getDateParam(call: Call<APOD>): String? {
+        return call.request().url().queryParameter(DATE_QUERY_PARAM)
+    }
+
+    private fun logToCrashlytics(exception: Exception){
+        Crashlytics.logException(exception)
     }
 }
