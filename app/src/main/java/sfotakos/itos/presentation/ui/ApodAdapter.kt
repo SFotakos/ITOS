@@ -176,6 +176,11 @@ class ApodAdapter(
                 context.getString(R.string.copyright_format, apod.copyright)
             }
 
+            if (apod.explanation.isEmpty())
+                itemView.apodDescription_textView.visibility = View.GONE
+            else
+                itemView.apodDescription_textView.visibility = View.VISIBLE
+
             itemView.apodDate_textView.text = localizedDateString(apod.date)
             itemView.apodDescription_textView.text = apod.explanation
         }
