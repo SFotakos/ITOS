@@ -24,6 +24,7 @@ class ApodViewModel(private val apodDb: ApodDb, private val continuityDb: Contin
         const val PAGE_SIZE = 25
     }
 
+    private lateinit var boundaryCallback: ApodBoundaryCallback
     private val config = PagedList.Config.Builder()
         .setInitialLoadSizeHint(INITIAL_LOAD_SIZE)
         .setPageSize(PAGE_SIZE)
@@ -46,7 +47,7 @@ class ApodViewModel(private val apodDb: ApodDb, private val continuityDb: Contin
             continuityDb.apodDao().queryAllApods(),
             config
         )
-        val boundaryCallback = ApodBoundaryCallback(apodDb, continuityDb)
+        boundaryCallback = ApodBoundaryCallback(apodDb, continuityDb)
         boundaryCallback.setInitialKey(initialDate)
         livePageListBuilder.setBoundaryCallback(boundaryCallback)
 
@@ -63,13 +64,9 @@ class ApodViewModel(private val apodDb: ApodDb, private val continuityDb: Contin
     }
 
     fun fetchApodByDate(date: Date) {
-        apods.value?.dataSource?.invalidate()
-        apods.value?.detach()
+        boundaryCallback.setInitialKey(dateToString(date))
         thread {
             continuityDb.apodDao().deleteAll()
         }
-        repoResult = fetchApods(dateToString(date))
-        apods = Transformations.switchMap(repoResult) { it.pagedList }
-        networkState = Transformations.switchMap(repoResult) { it.networkState }
     }
 }

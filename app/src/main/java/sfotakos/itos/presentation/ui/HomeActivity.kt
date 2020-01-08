@@ -155,17 +155,8 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
         startActivity(expandedImageIntent, options.toBundle())
     }
 
-    //TODO research if I really need to rebind the observer like this
-    //TODO should attachObservers when viewModel has finished preparation, probably observe on another variable.
     private fun fetchApodByDate(date: Date) {
-        detachObservers()
         viewModel.fetchApodByDate(date)
-        attachObservers()
-    }
-
-    private fun detachObservers() {
-        viewModel.apods.removeObservers(this)
-        viewModel.networkState.removeObservers(this)
     }
 
     private fun attachObservers() {
