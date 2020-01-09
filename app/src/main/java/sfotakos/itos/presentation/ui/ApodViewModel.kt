@@ -44,7 +44,7 @@ class ApodViewModel(private val apodDb: ApodDb, private val continuityDb: Contin
 
     private fun fetchApods(initialDate: String? = null): MutableLiveData<ResponseWrapper<APOD>> {
         val livePageListBuilder = LivePagedListBuilder<Int, APOD>(
-            continuityDb.apodDao().queryAllApods(),
+            continuityDb.apodDao().queryAllApodsDataSource(),
             config
         )
         boundaryCallback = ApodBoundaryCallback(apodDb, continuityDb)
@@ -66,7 +66,12 @@ class ApodViewModel(private val apodDb: ApodDb, private val continuityDb: Contin
     fun fetchApodByDate(date: Date) {
         boundaryCallback.setInitialKey(dateToString(date))
         thread {
-            continuityDb.apodDao().deleteAll()
+            val apods = continuityDb.apodDao().queryAllApods()
+            if (apods.isEmpty()) {
+                boundaryCallback.onZeroItemsLoaded()
+            } else {
+                continuityDb.apodDao().deleteAll()
+            }
         }
     }
 }
