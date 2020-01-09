@@ -3,8 +3,6 @@ package sfotakos.itos.data.repositories
 import androidx.paging.PagedList
 import androidx.paging.PagingRequestHelper
 import com.crashlytics.android.Crashlytics
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.google.gson.JsonIOException
 import retrofit2.Call
 import retrofit2.Callback
@@ -48,22 +46,7 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                 "\nHttpCode:$CODE_FORMAT"
     }
 
-    //TODO proper remoteconfig handling
-    init {
-        val firebaseRemoteConfig = FirebaseRemoteConfig.getInstance()
-        val configSettings = FirebaseRemoteConfigSettings.Builder()
-            .setMinimumFetchIntervalInSeconds(3600)
-            .build()
-        firebaseRemoteConfig.setConfigSettingsAsync(configSettings)
-        firebaseRemoteConfig.fetch().addOnCompleteListener {
-            if (it.isSuccessful) {
-                shouldLogHttp = firebaseRemoteConfig.getBoolean("log_http_connection")
-            }
-        }
-    }
-
     private var initialKey: String? = null
-    private var shouldLogHttp = false
 
     //This is so we can recycle this class instead of creating a new one every time the initial key changes
     fun setInitialKey(key: String?) {
