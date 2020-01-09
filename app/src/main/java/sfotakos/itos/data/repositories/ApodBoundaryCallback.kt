@@ -49,7 +49,6 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
     }
 
     //TODO proper remoteconfig handling
-    //TODO add custom key to crashlytics
     init {
         val firebaseRemoteConfig = FirebaseRemoteConfig.getInstance()
         val configSettings = FirebaseRemoteConfigSettings.Builder()
@@ -110,7 +109,7 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
             Executors.newSingleThreadExecutor().execute {
                 val apod: APOD? = apodDb.apodDao().queryByDate(calendarToString(calendar))
                 if (apod != null) {
-                    onSuccessfulFetch(apod, it)
+                    onSuccess(apod, it)
                 } else {
                     APODService.createService()
                         .getApodByDate(BuildConfig.NASA_KEY, calendarToString(calendar))
@@ -130,38 +129,7 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                 call: Call<APOD>,
                 t: Throwable
             ) {
-                when (t) {
-                    is IOException -> {
-                        recordFailure(
-                            it,
-                            CONNECTION_ERROR_MSG
-                        )
-                        logToCrashlytics(
-                            IOException(
-                                CRASHLYTICS_ERROR_MSG.format(
-                                    getDateParam(call),
-                                    t.cause,
-                                    CONNECTION_ERROR_CODE
-                                )
-                            )
-                        )
-                    }
-                    else -> {
-                        recordFailure(
-                            it,
-                            FORMATTED_ERROR_MSG.format(PARSING_ERROR_CODE)
-                        )
-                        logToCrashlytics(
-                            JsonIOException(
-                                CRASHLYTICS_ERROR_MSG.format(
-                                    getDateParam(call),
-                                    t.cause,
-                                    PARSING_ERROR_CODE
-                                )
-                            )
-                        )
-                    }
-                }
+                onRequestFailure(it, t, getDateParam(call))
             }
 
             override fun onResponse(
@@ -172,105 +140,24 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                     val apod: APOD? = response.body()
                     if (apod != null) {
                         Executors.newSingleThreadExecutor().execute {
-                            onSuccessfulFetch(apod, it)
+                            onSuccess(apod, it)
                         }
                     } else {
-                        recordFailure(
-                            it,
-                            FORMATTED_ERROR_MSG.format(SUCCESS_NULL_BODY_ERROR_CODE)
-                        )
-                        logToCrashlytics(
-                            IllegalStateException(
-                                CRASHLYTICS_ERROR_MSG.format(
-                                    getDateParam(call),
-                                    "Successful response but null APOD",
-                                    SUCCESS_NULL_BODY_ERROR_CODE
-                                )
-                            )
-                        )
+                        onSuccessfulRequestNullApod(it, getDateParam(call))
                     }
                 } else {
-                    when (response.code()) {
-                        INTERNAL_SERVER_ERROR -> {
-                            val date = getDateParam(call)
-                            if (date != null) {
-                                var calendar = gmtCalendar()
-                                calendar.time = stringToDate(date)
-                                calendar = when (requestType) {
-                                    PagingRequestHelper.RequestType.BEFORE -> nextDay(calendar)
-                                    PagingRequestHelper.RequestType.AFTER -> previousDay(calendar)
-                                    else -> {
-                                        recordFailure(
-                                            it,
-                                            FORMATTED_ERROR_MSG.format(INVALID_REQUEST_TYPE_ERROR_CODE)
-                                        )
-                                        logToCrashlytics(
-                                            IllegalStateException(
-                                                CRASHLYTICS_ERROR_MSG.format(
-                                                    getDateParam(call),
-                                                    "RequestType wasn't BEFORE nor AFTER",
-                                                    INVALID_REQUEST_TYPE_ERROR_CODE
-                                                )
-                                            )
-                                        )
-                                        return
-                                    }
-                                }
-                                // Need to record failure before retrying due to runIfNotRunning
-                                recordFailure(
-                                    it,
-                                    FORMATTED_ERROR_MSG.format(response.code())
-                                )
-                                if (shouldLogHttp) {
-                                    logToCrashlytics(
-                                        IOException(
-                                            CRASHLYTICS_ERROR_MSG.format(
-                                                getDateParam(call),
-                                                response.errorBody(),
-                                                response.code()
-                                            )
-                                        )
-                                    )
-                                }
-                                fetchApods(calendar, requestType)
-                            } else {
-                                recordFailure(
-                                    it,
-                                    FORMATTED_ERROR_MSG.format(INVALID_DATE_STATE_ERROR_CODE)
-                                )
-                                logToCrashlytics(
-                                    IllegalStateException(
-                                        CRASHLYTICS_ERROR_MSG.format(
-                                            getDateParam(call),
-                                            "Date shouldn't ever be null here",
-                                            INVALID_DATE_STATE_ERROR_CODE
-                                        )
-                                    )
-                                )
-                            }
-                        }
-                        else -> {
-                            recordFailure(
-                                it,
-                                FORMATTED_ERROR_MSG.format(response.code())
-                            )
-                            logToCrashlytics(
-                                IOException(
-                                    CRASHLYTICS_ERROR_MSG.format(
-                                        getDateParam(call),
-                                        response.errorBody(),
-                                        response.code()
-                                    )
-                                )
-                            )
-                        }
-                    }
+                    onSuccessfulRequestHttpError(it, requestType, getDateParam(call), response)
                 }
             }
         }
     }
 
-    private fun onSuccessfulFetch(
+
+    private fun getDateParam(call: Call<APOD>): String? {
+        return call.request().url().queryParameter(DATE_QUERY_PARAM)
+    }
+
+    private fun onSuccess(
         apod: APOD,
         requestCallback: PagingRequestHelper.Request.Callback
     ) {
@@ -279,18 +166,139 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
         requestCallback.recordSuccess()
     }
 
-    private fun recordFailure(
+    private fun recordCallbackFailure(
         it: PagingRequestHelper.Request.Callback,
         error: String
     ) {
         it.recordFailure(Throwable(error))
     }
 
-    private fun getDateParam(call: Call<APOD>): String? {
-        return call.request().url().queryParameter(DATE_QUERY_PARAM)
+    private fun onRequestFailure(
+        pagingRequestCallback: PagingRequestHelper.Request.Callback,
+        throwable: Throwable,
+        date: String?
+    ) {
+        when (throwable) {
+            is IOException -> {
+                recordCallbackFailure(pagingRequestCallback, CONNECTION_ERROR_MSG)
+                logToCrashlytics(
+                    IOException(throwable.cause),
+                    date,
+                    CONNECTION_ERROR_CODE
+                )
+            }
+            else -> {
+                recordCallbackFailure(
+                    pagingRequestCallback,
+                    FORMATTED_ERROR_MSG.format(PARSING_ERROR_CODE)
+                )
+                logToCrashlytics(
+                    JsonIOException(throwable.cause),
+                    date,
+                    PARSING_ERROR_CODE
+                )
+            }
+        }
+
     }
 
-    private fun logToCrashlytics(exception: Exception){
+    private fun onSuccessfulRequestNullApod(
+        pagingRequestCallback: PagingRequestHelper.Request.Callback,
+        date: String?
+    ) {
+        recordCallbackFailure(
+            pagingRequestCallback,
+            FORMATTED_ERROR_MSG.format(SUCCESS_NULL_BODY_ERROR_CODE)
+        )
+        logToCrashlytics(
+            IllegalStateException("Successful response but null APOD"),
+            date,
+            SUCCESS_NULL_BODY_ERROR_CODE
+        )
+    }
+
+    private fun onSuccessfulRequestHttpError(
+        pagingRequestCallback: PagingRequestHelper.Request.Callback,
+        requestType: PagingRequestHelper.RequestType,
+        date: String?,
+        response: Response<APOD>
+    ) {
+        when (response.code()) {
+            INTERNAL_SERVER_ERROR -> {
+                onInternalServerError(pagingRequestCallback, requestType, date, response)
+            }
+            else -> {
+                recordCallbackFailure(
+                    pagingRequestCallback,
+                    FORMATTED_ERROR_MSG.format(response.code())
+                )
+                logToCrashlytics(
+                    IOException(response.errorBody().toString()),
+                    date,
+                    response.code()
+                )
+            }
+        }
+    }
+
+    private fun onInternalServerError(
+        pagingRequestCallback: PagingRequestHelper.Request.Callback,
+        requestType: PagingRequestHelper.RequestType,
+        date: String?,
+        response: Response<APOD>
+    ) {
+        if (date != null) {
+            var calendar = gmtCalendar()
+            calendar.time = stringToDate(date)
+            calendar = when (requestType) {
+                PagingRequestHelper.RequestType.BEFORE -> nextDay(calendar)
+                PagingRequestHelper.RequestType.AFTER -> previousDay(calendar)
+                else -> {
+                    recordCallbackFailure(
+                        pagingRequestCallback,
+                        FORMATTED_ERROR_MSG.format(INVALID_REQUEST_TYPE_ERROR_CODE)
+                    )
+                    logToCrashlytics(
+                        IllegalStateException("Selected date is not available"),
+                        date,
+                        INVALID_REQUEST_TYPE_ERROR_CODE
+                    )
+                    return
+                }
+            }
+            // Need to record failure before retrying due to runIfNotRunning
+            recordCallbackFailure(
+                pagingRequestCallback,
+                FORMATTED_ERROR_MSG.format(response.code())
+            )
+
+            logToCrashlytics(
+                IOException(response.errorBody().toString()),
+                date,
+                response.code()
+            )
+
+            fetchApods(calendar, requestType)
+        } else {
+            recordCallbackFailure(
+                pagingRequestCallback,
+                FORMATTED_ERROR_MSG.format(INVALID_DATE_STATE_ERROR_CODE)
+            )
+            logToCrashlytics(
+                IllegalStateException("Date shouldn't be null here"),
+                date,
+                INVALID_DATE_STATE_ERROR_CODE
+            )
+        }
+    }
+
+    private fun logToCrashlytics(
+        exception: Exception,
+        date: String?,
+        internalErrorCode: Int
+    ) {
+        Crashlytics.setString("date", date)
+        Crashlytics.setInt("internalErrorCode", internalErrorCode)
         Crashlytics.logException(exception)
     }
 }

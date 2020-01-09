@@ -13,7 +13,10 @@ interface ApodDao {
     fun insertApod(posts: APOD)
 
     @Query("SELECT * FROM APOD ORDER BY DATE DESC")
-    fun queryAllApods(): DataSource.Factory<Int, APOD>
+    fun queryAllApodsDataSource(): DataSource.Factory<Int, APOD>
+
+    @Query("SELECT * FROM APOD ORDER BY DATE DESC")
+    fun queryAllApods(): List<APOD>
 
     @Query("SELECT * FROM APOD WHERE DATE = :selectedDate ORDER BY DATE DESC")
     fun queryByDate(selectedDate: String): APOD
