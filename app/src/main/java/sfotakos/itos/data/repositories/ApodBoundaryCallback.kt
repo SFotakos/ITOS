@@ -14,6 +14,8 @@ import sfotakos.itos.ApodDateUtils.nextDay
 import sfotakos.itos.ApodDateUtils.previousDay
 import sfotakos.itos.ApodDateUtils.stringToDate
 import sfotakos.itos.BuildConfig
+import sfotakos.itos.ItosApp
+import sfotakos.itos.R
 import sfotakos.itos.data.entities.APOD
 import sfotakos.itos.data.repositories.APODService.Companion.DATE_QUERY_PARAM
 import sfotakos.itos.data.repositories.db.ApodDb
@@ -28,7 +30,6 @@ import java.util.concurrent.Executors
 class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb: ContinuityDb) :
     PagedList.BoundaryCallback<APOD>() {
 
-    //TODO get context into this class to get from strings.xml
     companion object {
         const val INTERNAL_SERVER_ERROR = 500
         const val CONNECTION_ERROR_CODE = -1
@@ -36,14 +37,6 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
         const val INVALID_REQUEST_TYPE_ERROR_CODE = -3
         const val INVALID_DATE_STATE_ERROR_CODE = -4
         const val SUCCESS_NULL_BODY_ERROR_CODE = -200
-        private const val ERROR_MSG = "There was a rip in time space, we'll try mending it."
-        private const val CODE_FORMAT = " (%d)"
-        const val CONNECTION_ERROR_MSG = "Planet tracking was lost, retrieving connection..."
-        const val FORMATTED_ERROR_MSG = ERROR_MSG + CODE_FORMAT
-        const val CRASHLYTICS_ERROR_MSG = "Error fetching APOD" +
-                "\nDate: %s" +
-                "\nErrorMessage: %s" +
-                "\nHttpCode:$CODE_FORMAT"
     }
 
     private var initialKey: String? = null
@@ -163,7 +156,10 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
     ) {
         when (throwable) {
             is IOException -> {
-                recordCallbackFailure(pagingRequestCallback, CONNECTION_ERROR_MSG)
+                recordCallbackFailure(
+                    pagingRequestCallback,
+                    getStringResource(R.string.apod_connection_error)
+                )
                 logToCrashlytics(
                     IOException(throwable.cause),
                     date,
@@ -173,7 +169,7 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
             else -> {
                 recordCallbackFailure(
                     pagingRequestCallback,
-                    FORMATTED_ERROR_MSG.format(PARSING_ERROR_CODE)
+                    errorMsg(PARSING_ERROR_CODE)
                 )
                 logToCrashlytics(
                     JsonIOException(throwable.cause),
@@ -191,10 +187,10 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
     ) {
         recordCallbackFailure(
             pagingRequestCallback,
-            FORMATTED_ERROR_MSG.format(SUCCESS_NULL_BODY_ERROR_CODE)
+            errorMsg(SUCCESS_NULL_BODY_ERROR_CODE)
         )
         logToCrashlytics(
-            IllegalStateException("Successful response but null APOD"),
+            IllegalStateException(getStringResource(R.string.crashlytics_successful_response_null_apod)),
             date,
             SUCCESS_NULL_BODY_ERROR_CODE
         )
@@ -213,7 +209,7 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
             else -> {
                 recordCallbackFailure(
                     pagingRequestCallback,
-                    FORMATTED_ERROR_MSG.format(response.code())
+                    errorMsg(response.code())
                 )
                 logToCrashlytics(
                     IOException(response.errorBody().toString()),
@@ -239,10 +235,10 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                 else -> {
                     recordCallbackFailure(
                         pagingRequestCallback,
-                        FORMATTED_ERROR_MSG.format(INVALID_REQUEST_TYPE_ERROR_CODE)
+                        errorMsg(INVALID_REQUEST_TYPE_ERROR_CODE)
                     )
                     logToCrashlytics(
-                        IllegalStateException("Selected date is not available"),
+                        IllegalStateException(getStringResource(R.string.crashlytics_selected_date_not_available)),
                         date,
                         INVALID_REQUEST_TYPE_ERROR_CODE
                     )
@@ -252,7 +248,7 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
             // Need to record failure before retrying due to runIfNotRunning
             recordCallbackFailure(
                 pagingRequestCallback,
-                FORMATTED_ERROR_MSG.format(response.code())
+                errorMsg(response.code())
             )
 
             logToCrashlytics(
@@ -265,14 +261,22 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
         } else {
             recordCallbackFailure(
                 pagingRequestCallback,
-                FORMATTED_ERROR_MSG.format(INVALID_DATE_STATE_ERROR_CODE)
+                errorMsg(INVALID_DATE_STATE_ERROR_CODE)
             )
             logToCrashlytics(
-                IllegalStateException("Date shouldn't be null here"),
+                IllegalStateException(getStringResource(R.string.crashlytics_date_should_not_be_null)),
                 date,
                 INVALID_DATE_STATE_ERROR_CODE
             )
         }
+    }
+
+    private fun getStringResource(id: Int): String {
+        return ItosApp.getContext().resources.getString(id)
+    }
+
+    private fun errorMsg(errorCode: Int): String {
+        return ItosApp.getContext().resources.getString(R.string.apod_error, errorCode)
     }
 
     private fun logToCrashlytics(
@@ -280,8 +284,11 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
         date: String?,
         internalErrorCode: Int
     ) {
-        Crashlytics.setString("date", date)
-        Crashlytics.setInt("internalErrorCode", internalErrorCode)
+        Crashlytics.setString(getStringResource(R.string.crashlytics_customkey_date), date)
+        Crashlytics.setInt(
+            getStringResource(R.string.crashlytics_customkey_internal_error_code),
+            internalErrorCode
+        )
         Crashlytics.logException(exception)
     }
 }
