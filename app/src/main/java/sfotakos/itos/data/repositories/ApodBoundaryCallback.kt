@@ -32,7 +32,6 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
 
     companion object {
         const val INTERNAL_SERVER_ERROR = 500
-        const val CONNECTION_ERROR_CODE = -1
         const val PARSING_ERROR_CODE = -2
         const val INVALID_REQUEST_TYPE_ERROR_CODE = -3
         const val INVALID_DATE_STATE_ERROR_CODE = -4
@@ -160,11 +159,6 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                     pagingRequestCallback,
                     getStringResource(R.string.apod_connection_error)
                 )
-                logToCrashlytics(
-                    IOException(throwable.cause),
-                    date,
-                    CONNECTION_ERROR_CODE
-                )
             }
             else -> {
                 recordCallbackFailure(
@@ -178,7 +172,6 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
                 )
             }
         }
-
     }
 
     private fun onSuccessfulRequestNullApod(
