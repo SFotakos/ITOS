@@ -30,6 +30,7 @@
             app:layout_constraintStart_toStartOf="@+id/apodPicture_imageView"
             app:layout_constraintTop_toTopOf="@+id/apodPicture_imageView"
             app:lottie_autoPlay="false"
+            app:lottie_enableMergePathsForKitKatAndAbove="true"
             app:lottie_loop="true"
             app:lottie_rawRes="@raw/rocket" />
 
