@@ -16,6 +16,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.paging.PagedListAdapter
+import androidx.paging.PagingRequestHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.lottie.LottieAnimationView
 import com.bumptech.glide.Glide
@@ -28,8 +29,6 @@ import sfotakos.itos.ApodDateUtils.localizedDateString
 import sfotakos.itos.R
 import sfotakos.itos.data.entities.APOD
 import sfotakos.itos.data.entities.MediaType
-import sfotakos.itos.network.NetworkState
-import sfotakos.itos.network.Status
 import kotlin.math.roundToInt
 
 //TODO proper error layout
@@ -40,29 +39,34 @@ class ApodAdapter(
 ) :
     PagedListAdapter<APOD, RecyclerView.ViewHolder>(ApodDiffUtilCallback()) {
 
-    private var networkState: NetworkState? = null
+    private var topError: String? = null
+    private var bottomError: String? = null
+    private var topStatus: PagingRequestHelper.Status? = null
+    private var bottomStatus: PagingRequestHelper.Status? = null
 
     companion object {
         const val ICON_MIN_SIZE = 96f
         const val LOADING_MIN_SIZE = 190f
         const val CROSSFADE_DURATION = 450
+        const val TOP_ERROR_ID = 1
+        const val BOTTOM_ERROR_ID = -1
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return when (viewType) {
-            R.layout.item_apod -> {
-                ApodViewHolder(
-                    LayoutInflater.from(parent.context)
-                        .inflate(R.layout.item_apod, parent, false), listener
-                )
-            }
-            R.layout.network_state_item -> {
-                NetworkStateItemViewHolder(
-                    LayoutInflater.from(parent.context)
-                        .inflate(R.layout.network_state_item, parent, false), retryCallback
-                )
-            }
-            else -> throw IllegalArgumentException("unknown view type $viewType")
+        return if (viewType == R.layout.item_apod) {
+            ApodViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_apod, parent, false), listener
+            )
+        } else if (viewType == (R.layout.network_state_item + BOTTOM_ERROR_ID) ||
+            viewType == (R.layout.network_state_item + TOP_ERROR_ID)
+        ) {
+            NetworkStateItemViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.network_state_item, parent, false), retryCallback
+            )
+        } else {
+            throw IllegalArgumentException("unknown view type $viewType")
         }
     }
 
@@ -73,38 +77,71 @@ class ApodAdapter(
                     (holder as ApodViewHolder).bind(it)
                 }
             }
-            R.layout.network_state_item -> (holder as NetworkStateItemViewHolder).bindTo(
-                networkState
-            )
+            R.layout.network_state_item + TOP_ERROR_ID ->
+                (holder as NetworkStateItemViewHolder).bindTo(
+                    topStatus, topError
+                )
+            R.layout.network_state_item + BOTTOM_ERROR_ID -> {
+                (holder as NetworkStateItemViewHolder).bindTo(
+                    topStatus, topError
+                )
+            }
         }
     }
 
     override fun getItemCount(): Int {
-        return super.getItemCount() + if (hasExtraRow()) 1 else 0
+        return super.getItemCount() + if (hasExtraBottomRow()) 1 else 0
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (hasExtraRow() && position == itemCount - 1) {
-            R.layout.network_state_item
+        return if (hasExtraBottomRow() && position == itemCount - 1) {
+            R.layout.network_state_item + BOTTOM_ERROR_ID
+        } else if (hasExtraTopRow() && position == 0) {
+            R.layout.network_state_item + TOP_ERROR_ID
         } else {
             return R.layout.item_apod
         }
     }
 
-    private fun hasExtraRow() = networkState != null && networkState != NetworkState.LOADED
+    private fun hasExtraTopRow() = topStatus != null &&
+            topStatus != PagingRequestHelper.Status.SUCCESS
 
-    fun setNetworkState(newNetworkState: NetworkState?) {
-        val previousState = this.networkState
-        val hadExtraRow = hasExtraRow()
-        this.networkState = newNetworkState
-        val hasExtraRow = hasExtraRow()
+    private fun hasExtraBottomRow() = bottomStatus != null &&
+            bottomStatus != PagingRequestHelper.Status.SUCCESS
+
+    fun setNetworkState(statusReport: PagingRequestHelper.StatusReport) {
+        processBottomLoading(statusReport)
+        processTopLoading(statusReport)
+    }
+
+    private fun processTopLoading(statusReport: PagingRequestHelper.StatusReport) {
+        topStatus = statusReport.before
+        topError = statusReport.getErrorFor(PagingRequestHelper.RequestType.BEFORE)?.message
+        val hadExtraRow = hasExtraTopRow()
+        val hasExtraRow = hasExtraTopRow()
+        if (hadExtraRow != hasExtraRow) {
+            if (hadExtraRow) {
+                notifyItemRemoved(0)
+            } else {
+                notifyItemInserted(0)
+            }
+        } else if (hasExtraRow && bottomStatus != statusReport.before) {
+            notifyItemChanged(0)
+        }
+    }
+
+    private fun processBottomLoading(statusReport: PagingRequestHelper.StatusReport) {
+        bottomStatus = statusReport.after
+        bottomError = statusReport.getErrorFor(PagingRequestHelper.RequestType.AFTER)?.message
+        val hadExtraRow = hasExtraBottomRow()
+        val hasExtraRow = hasExtraBottomRow()
         if (hadExtraRow != hasExtraRow) {
             if (hadExtraRow) {
                 notifyItemRemoved(super.getItemCount())
             } else {
                 notifyItemInserted(super.getItemCount())
             }
-        } else if (hasExtraRow && previousState != newNetworkState) {
+        } else if (hasExtraRow && bottomStatus != statusReport.after) {
             notifyItemChanged(itemCount - 1)
         }
     }
@@ -132,8 +169,17 @@ class ApodAdapter(
                     itemView.apodPicture_imageView.layoutParams = layoutParams
                     Glide.with(context)
                         .load(apod.url)
-                        .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
-                        .error(ContextCompat.getDrawable(context, R.drawable.ic_destroyed_planet))
+                        .transition(
+                            DrawableTransitionOptions.withCrossFade(
+                                CROSSFADE_DURATION
+                            )
+                        )
+                        .error(
+                            ContextCompat.getDrawable(
+                                context,
+                                R.drawable.ic_destroyed_planet
+                            )
+                        )
                         .transform(
                             RoundedCorners(
                                 ScalingUtil.dpToPixel(context, 8f).roundToInt()
@@ -142,7 +188,10 @@ class ApodAdapter(
                         .into(apodTarget)
 
                     itemView.apodPicture_imageView.setOnClickListener {
-                        ViewCompat.setTransitionName(itemView.apodPicture_imageView, apod.date)
+                        ViewCompat.setTransitionName(
+                            itemView.apodPicture_imageView,
+                            apod.date
+                        )
                         listener.expandImage(itemView.apodPicture_imageView, apod)
                     }
                 }
@@ -200,11 +249,11 @@ class ApodAdapter(
             }
         }
 
-        fun bindTo(networkState: NetworkState?) {
-            progress.visibility = toVisibility(networkState?.status == Status.RUNNING)
-            retry.visibility = toVisibility(networkState?.status == Status.FAILED)
-            errorMsg.visibility = toVisibility(networkState?.msg != null)
-            errorMsg.text = networkState?.msg
+        fun bindTo(status: PagingRequestHelper.Status?, error: String?) {
+            progress.visibility = toVisibility(status == PagingRequestHelper.Status.RUNNING)
+            retry.visibility = toVisibility(status == PagingRequestHelper.Status.FAILED)
+            errorMsg.visibility = toVisibility(error != null)
+            errorMsg.text = error
         }
 
         companion object {
@@ -237,8 +286,10 @@ class ApodAdapter(
             itemView.imageLoading.visibility = View.GONE
             val layoutParams = itemView.apodPicture_imageView.layoutParams
             val context = itemView.context
-            layoutParams.height = ScalingUtil.dpToPixel(context, LOADING_MIN_SIZE).roundToInt()
-            layoutParams.width = ScalingUtil.dpToPixel(context, LOADING_MIN_SIZE).roundToInt()
+            layoutParams.height =
+                ScalingUtil.dpToPixel(context, LOADING_MIN_SIZE).roundToInt()
+            layoutParams.width =
+                ScalingUtil.dpToPixel(context, LOADING_MIN_SIZE).roundToInt()
             itemView.apodPicture_imageView.layoutParams = layoutParams
             itemView.apodPicture_imageView.setImageDrawable(
                 ContextCompat.getDrawable(context, R.drawable.ic_destroyed_planet)
@@ -247,7 +298,10 @@ class ApodAdapter(
             super.onLoadFailed(errorDrawable)
         }
 
-        override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
+        override fun onResourceReady(
+            resource: Drawable,
+            transition: Transition<in Drawable>?
+        ) {
             itemView.apodPicture_imageView.minimumHeight = 0
             itemView.apodPicture_imageView.minimumWidth = 0
             itemView.apodPicture_imageView.visibility = View.VISIBLE

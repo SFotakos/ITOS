@@ -6,6 +6,7 @@ import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
+import androidx.paging.PagingRequestHelper
 import sfotakos.itos.ApodDateUtils.dateToString
 import sfotakos.itos.data.entities.APOD
 import sfotakos.itos.data.repositories.ApodBoundaryCallback
@@ -34,7 +35,7 @@ class ApodViewModel(private val apodDb: ApodDb, private val continuityDb: Contin
     private var repoResult: MutableLiveData<ResponseWrapper<APOD>> = fetchApods()
 
     var apods: LiveData<PagedList<APOD>> = Transformations.switchMap(repoResult) { it.pagedList }
-    var networkState: LiveData<NetworkState> =
+    var networkState: LiveData<PagingRequestHelper.StatusReport> =
         Transformations.switchMap(repoResult) { it.networkState }
 
     fun retry() {
