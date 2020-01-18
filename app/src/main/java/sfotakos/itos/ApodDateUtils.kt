@@ -14,7 +14,7 @@ object ApodDateUtils {
     private const val TOMORROW = 1
 
     private var earliestDateCalendar: Calendar? = null
-    private val gmtCalendar = Calendar.getInstance(TimeZone.getTimeZone("GMT-7"))
+    private val gmtCalendar = Calendar.getInstance(TimeZone.getTimeZone("GMT-8"))
 
     fun gmtCalendar(): Calendar {
         return gmtCalendar?.clone() as Calendar
@@ -68,7 +68,7 @@ object ApodDateUtils {
     @SuppressLint("SimpleDateFormat")
     fun calendarToString(calendar: Calendar): String {
         val dateFormat = SimpleDateFormat(QUERY_DATE_FORMAT)
-        return dateFormat.format(calendar.time)
+        return dateFormat.format(calendar.zonedTime())
     }
 
     /**
@@ -124,4 +124,8 @@ object ApodDateUtils {
             else calendar.timeZone.getOffset(calendar.timeInMillis)
         return calendar.timeInMillis + offset
     }
+}
+
+fun Calendar.zonedTime() : Date {
+    return Date(ApodDateUtils.zonedTimeInMillis(this, true))
 }

@@ -30,6 +30,7 @@ import sfotakos.itos.data.repositories.db.ContinuityDb
 import sfotakos.itos.network.ConnectionLiveData
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_ARG
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_IMAGE_TRANSITION_NAME
+import sfotakos.itos.zonedTime
 import java.util.*
 
 class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
@@ -39,7 +40,7 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
     private lateinit var connectionLiveData: ConnectionLiveData
     private lateinit var viewModel: ApodViewModel
 
-    private val selectionCalendar = ApodDateUtils.gmtCalendar()
+    private val selectionCalendar = gmtCalendar()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,7 +85,7 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
                         } else if (selectionCalendar > offsetTodayCalendar) {
                             selectionCalendar.time = offsetTodayCalendar.time
                         }
-                        fetchApodByDate(selectionCalendar.time)
+                        fetchApodByDate(selectionCalendar.zonedTime())
                     }
                 val datePickerDialog = DatePickerDialog(
                     this, dateSetListener,
