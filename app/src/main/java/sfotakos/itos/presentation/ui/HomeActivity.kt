@@ -19,7 +19,6 @@ import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_home.*
-import sfotakos.itos.ApodDateUtils
 import sfotakos.itos.ApodDateUtils.earliestApiDateCalendar
 import sfotakos.itos.ApodDateUtils.gmtCalendar
 import sfotakos.itos.ApodDateUtils.zonedTimeInMillis

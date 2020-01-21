@@ -9,7 +9,6 @@ import retrofit2.Callback
 import retrofit2.Response
 import sfotakos.itos.ApodDateUtils.calendarToString
 import sfotakos.itos.ApodDateUtils.earliestApiDateCalendar
-import sfotakos.itos.ApodDateUtils.gmtCalendar
 import sfotakos.itos.ApodDateUtils.nextDay
 import sfotakos.itos.ApodDateUtils.previousDay
 import sfotakos.itos.ApodDateUtils.stringToDate
@@ -51,7 +50,7 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
 
     override fun onZeroItemsLoaded() {
         super.onZeroItemsLoaded()
-        val calendar = gmtCalendar()
+        val calendar = Calendar.getInstance()
         initialKey?.let {
             calendar.time = stringToDate(initialKey!!)
         }
@@ -60,10 +59,10 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
 
     override fun onItemAtFrontLoaded(itemAtFront: APOD) {
         super.onItemAtFrontLoaded(itemAtFront)
-        val calendar = gmtCalendar()
+        val calendar = Calendar.getInstance()
         calendar.time = stringToDate(itemAtFront.date)
         nextDay(calendar)
-        if (calendar < gmtCalendar()) {
+        if (calendar < Calendar.getInstance()) {
             fetchApods(calendar, PagingRequestHelper.RequestType.BEFORE)
         }
     }
@@ -71,7 +70,7 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
     override fun onItemAtEndLoaded(itemAtEnd: APOD) {
         super.onItemAtEndLoaded(itemAtEnd)
         val earliestDateCalendar = earliestApiDateCalendar()
-        val calendar = gmtCalendar()
+        val calendar = Calendar.getInstance()
         calendar.time = stringToDate(itemAtEnd.date)
         if (calendar >= earliestDateCalendar) {
             fetchApods(previousDay(calendar), PagingRequestHelper.RequestType.AFTER)
@@ -220,7 +219,7 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
         response: Response<APOD>
     ) {
         if (date != null) {
-            var calendar = gmtCalendar()
+            var calendar = Calendar.getInstance()
             calendar.time = stringToDate(date)
             calendar = when (requestType) {
                 PagingRequestHelper.RequestType.BEFORE -> nextDay(calendar)
