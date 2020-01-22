@@ -5,7 +5,7 @@ import java.text.DateFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.Calendar.JUNE
+import java.util.Calendar.*
 
 object ApodDateUtils {
 
@@ -14,7 +14,7 @@ object ApodDateUtils {
     private const val TOMORROW = 1
 
     private var earliestDateCalendar: Calendar? = null
-    private val gmtCalendar = Calendar.getInstance(TimeZone.getTimeZone("GMT-8"))
+    private val gmtCalendar = getInstance(TimeZone.getTimeZone("GMT-8"))
 
     fun gmtCalendar(): Calendar {
         return gmtCalendar?.clone() as Calendar
@@ -27,10 +27,10 @@ object ApodDateUtils {
      */
     fun earliestApiDateCalendar(): Calendar {
         if (earliestDateCalendar == null) {
-            val calendar = gmtCalendar()
-            calendar.set(Calendar.YEAR, 1995)
-            calendar.set(Calendar.MONTH, JUNE)
-            calendar.set(Calendar.DAY_OF_MONTH, 16)
+            val calendar = getInstance()
+            calendar.set(YEAR, 1995)
+            calendar.set(MONTH, JUNE)
+            calendar.set(DAY_OF_MONTH, 16)
             earliestDateCalendar = calendar
         }
 
@@ -44,7 +44,7 @@ object ApodDateUtils {
      * @return the same calendar decremented a day
      */
     fun previousDay(calendar: Calendar): Calendar {
-        calendar.add(Calendar.DATE, YESTERDAY)
+        calendar.add(DATE, YESTERDAY)
         return calendar
     }
 
@@ -55,7 +55,7 @@ object ApodDateUtils {
      * @return the same calendar incremented a day
      */
     fun nextDay(calendar: Calendar): Calendar {
-        calendar.add(Calendar.DATE, TOMORROW)
+        calendar.add(DATE, TOMORROW)
         return calendar
     }
 
@@ -68,7 +68,7 @@ object ApodDateUtils {
     @SuppressLint("SimpleDateFormat")
     fun calendarToString(calendar: Calendar): String {
         val dateFormat = SimpleDateFormat(QUERY_DATE_FORMAT)
-        return dateFormat.format(calendar.zonedTime())
+        return dateFormat.format(calendar.time)
     }
 
     /**

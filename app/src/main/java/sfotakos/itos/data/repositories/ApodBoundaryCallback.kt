@@ -9,6 +9,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import sfotakos.itos.ApodDateUtils.calendarToString
 import sfotakos.itos.ApodDateUtils.earliestApiDateCalendar
+import sfotakos.itos.ApodDateUtils.gmtCalendar
 import sfotakos.itos.ApodDateUtils.nextDay
 import sfotakos.itos.ApodDateUtils.previousDay
 import sfotakos.itos.ApodDateUtils.stringToDate
@@ -20,6 +21,7 @@ import sfotakos.itos.data.repositories.APODService.Companion.DATE_QUERY_PARAM
 import sfotakos.itos.data.repositories.db.ApodDb
 import sfotakos.itos.data.repositories.db.ContinuityDb
 import sfotakos.itos.network.createStatusLiveData
+import sfotakos.itos.zonedTime
 import java.io.IOException
 import java.lang.Exception
 import java.lang.IllegalStateException
@@ -62,7 +64,7 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
         val calendar = Calendar.getInstance()
         calendar.time = stringToDate(itemAtFront.date)
         nextDay(calendar)
-        if (calendar < Calendar.getInstance()) {
+        if (calendar < gmtCalendar()) {
             fetchApods(calendar, PagingRequestHelper.RequestType.BEFORE)
         }
     }
