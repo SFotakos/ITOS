@@ -63,20 +63,20 @@ class ConnectionLiveData(private val context: Context) : LiveData<Boolean>() {
 
             connectivityManagerCallback = object : ConnectivityManager.NetworkCallback() {
                 var previousDownstreamBandwidth: Int = 0
-                override fun onAvailable(network: Network?) {
+                override fun onAvailable(network: Network) {
                     postValue(true)
                 }
 
-                override fun onLost(network: Network?) {
+                override fun onLost(network: Network) {
                     postValue(false)
                 }
 
                 override fun onCapabilitiesChanged(
-                    network: Network?,
-                    networkCapabilities: NetworkCapabilities?
+                    network: Network,
+                    networkCapabilities: NetworkCapabilities
                 ) {
 //                    Log.d("ConnectionLiveData", "onCapabilitiesChanged")
-                    networkCapabilities?.let {
+                    networkCapabilities.let {
                         val downstreamBandwidth = networkCapabilities.linkDownstreamBandwidthKbps
                         if (previousDownstreamBandwidth >= downstreamBandwidth) {
                             previousDownstreamBandwidth = downstreamBandwidth
