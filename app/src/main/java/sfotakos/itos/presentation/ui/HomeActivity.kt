@@ -17,8 +17,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.synthetic.main.activity_home.*
-import kotlinx.android.synthetic.main.content_home.*
 import sfotakos.itos.ApodDateUtils.earliestApiDateCalendar
 import sfotakos.itos.ApodDateUtils.gmtCalendar
 import sfotakos.itos.ApodDateUtils.zonedTimeInMillis
@@ -26,6 +24,7 @@ import sfotakos.itos.R
 import sfotakos.itos.data.entities.APOD
 import sfotakos.itos.data.repositories.db.ApodDb
 import sfotakos.itos.data.repositories.db.ContinuityDb
+import sfotakos.itos.databinding.ActivityHomeBinding
 import sfotakos.itos.network.ConnectionLiveData
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_ARG
 import sfotakos.itos.presentation.ui.ExpandedImageActivity.Companion.APOD_IMAGE_TRANSITION_NAME
@@ -41,10 +40,13 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
 
     private val selectionCalendar = gmtCalendar()
 
+    private lateinit var homeBinding : ActivityHomeBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_home)
-        setSupportActionBar(toolbar)
+        homeBinding = ActivityHomeBinding.inflate(layoutInflater)
+        setContentView(homeBinding.root)
+        setSupportActionBar(homeBinding.toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
         connectionLiveData = ConnectionLiveData(this)
@@ -119,9 +121,9 @@ class HomeActivity : AppCompatActivity(), ApodAdapter.ApodAdapterListener {
     }
 
     private fun initializeList() {
-        apod_recyclerView.layoutManager = LinearLayoutManager(this)
-        apod_recyclerView.adapter = adapter
-        apod_recyclerView.addItemDecoration(
+        homeBinding.content.apodRecyclerView.layoutManager = LinearLayoutManager(this)
+        homeBinding.content.apodRecyclerView.adapter = adapter
+        homeBinding.content.apodRecyclerView.addItemDecoration(
             ApodItemDecoration(
                 ContextCompat.getDrawable(
                     this,

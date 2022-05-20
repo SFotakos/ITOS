@@ -20,7 +20,6 @@ import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
-import kotlinx.android.synthetic.main.activity_expanded_image.*
 import sfotakos.itos.BuildConfig
 import sfotakos.itos.R
 import sfotakos.itos.data.FileUtils.addImageToGallery
@@ -28,6 +27,7 @@ import sfotakos.itos.data.FileUtils.checkIfFileExists
 import sfotakos.itos.data.FileUtils.compressAndSaveImage
 import sfotakos.itos.data.FileUtils.generateImagePath
 import sfotakos.itos.data.entities.APOD
+import sfotakos.itos.databinding.ActivityExpandedImageBinding
 import java.io.File
 
 class ExpandedImageActivity : AppCompatActivity() {
@@ -43,6 +43,8 @@ class ExpandedImageActivity : AppCompatActivity() {
     lateinit var requestPermissionCallback: () -> Unit
     lateinit var shareImageCallback: () -> Unit
     lateinit var apod: APOD
+
+    lateinit var expandedImageBinding : ActivityExpandedImageBinding
 
     private val requestListener = object : RequestListener<Drawable> {
         override fun onLoadFailed(
@@ -63,9 +65,9 @@ class ExpandedImageActivity : AppCompatActivity() {
             resource?.let { drawable ->
                 requestPermissionCallback = {
                     var imagePath: Uri? = null
-                    saveImage.addAnimatorListener(object : Animator.AnimatorListener {
+                    expandedImageBinding.saveImage.addAnimatorListener(object : Animator.AnimatorListener {
                         override fun onAnimationRepeat(animation: Animator?) {
-                            saveImage.cancelAnimation()
+                            expandedImageBinding.saveImage.cancelAnimation()
                             if (imagePath == null) {
                                 Toast.makeText(
                                     this@ExpandedImageActivity,
@@ -73,11 +75,11 @@ class ExpandedImageActivity : AppCompatActivity() {
                                     Toast.LENGTH_LONG
                                 ).show()
                             }
-                            saveImage.isClickable = true
+                            expandedImageBinding.saveImage.isClickable = true
                         }
 
                         override fun onAnimationStart(animation: Animator?) {
-                            saveImage.isClickable = false
+                            expandedImageBinding.saveImage.isClickable = false
                         }
 
                         override fun onAnimationEnd(animation: Animator?) {/*unused*/
@@ -86,7 +88,7 @@ class ExpandedImageActivity : AppCompatActivity() {
                         override fun onAnimationCancel(animation: Animator?) {/*unused*/
                         }
                     })
-                    saveImage.playAnimation()
+                    expandedImageBinding.saveImage.playAnimation()
                     imagePath = saveImageToGallery(
                         drawableToBitmap(drawable),
                         apod.title,
@@ -126,15 +128,15 @@ class ExpandedImageActivity : AppCompatActivity() {
                     }
                 }
             }
-            saveImage.setOnClickListener {
+            expandedImageBinding.saveImage.setOnClickListener {
                 if (hasWritePermissions()) {
                     requestPermissionCallback.invoke()
                 } else {
                     requestWritePermission(REQUEST_WRITE_STORAGE_REQUEST_CODE_SAVE)
                 }
             }
-            shareApod.setOnClickListener {
-                shareApod.isClickable = false
+            expandedImageBinding.shareApod.setOnClickListener {
+                expandedImageBinding.shareApod.isClickable = false
                 if (hasWritePermissions()) {
                     shareImageCallback.invoke()
                 } else {
@@ -147,8 +149,8 @@ class ExpandedImageActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        setContentView(R.layout.activity_expanded_image)
+        expandedImageBinding = ActivityExpandedImageBinding.inflate(layoutInflater)
+        setContentView(expandedImageBinding.root)
         supportPostponeEnterTransition()
         supportActionBar?.hide()
 
@@ -159,15 +161,15 @@ class ExpandedImageActivity : AppCompatActivity() {
         apod = extras.getSerializable(APOD_ARG) as APOD
         check(pictureTransitionName != null)
 
-        expanded_ImageView.transitionName = pictureTransitionName
+        expandedImageBinding.expandedImageView.transitionName = pictureTransitionName
 
         Glide.with(this)
             .load(apod.url)
             .listener(requestListener)
             .error(ContextCompat.getDrawable(this, R.drawable.ic_destroyed_planet))
-            .into(expanded_ImageView as ImageView)
+            .into(expandedImageBinding.expandedImageView as ImageView)
 
-        closeDialog.setOnClickListener {
+        expandedImageBinding.closeDialog.setOnClickListener {
             super.onBackPressed()
         }
     }
@@ -175,7 +177,7 @@ class ExpandedImageActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         // IntentChooser listener doesn't listen to cancel and back, this enables the button (double click prevention)
-        shareApod.isClickable = true
+        expandedImageBinding.shareApod.isClickable = true
     }
 
     fun saveImageToGallery(bitmap: Bitmap, title: String, description: String, date: String): Uri? {

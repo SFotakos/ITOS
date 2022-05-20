@@ -2,7 +2,7 @@ package sfotakos.itos.data.repositories
 
 import androidx.paging.PagedList
 import androidx.paging.PagingRequestHelper
-import com.crashlytics.android.Crashlytics
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.gson.JsonIOException
 import retrofit2.Call
 import retrofit2.Callback
@@ -278,11 +278,12 @@ class ApodBoundaryCallback(private val apodDb: ApodDb, private val continuityDb:
         date: String?,
         internalErrorCode: Int
     ) {
-        Crashlytics.setString(getStringResource(R.string.crashlytics_customkey_date), date)
-        Crashlytics.setInt(
-            getStringResource(R.string.crashlytics_customkey_internal_error_code),
-            internalErrorCode
+        val crashlytics = FirebaseCrashlytics.getInstance()
+        crashlytics.setCustomKey(getStringResource(R.string.crashlytics_customkey_date),
+            date ?: "null"
         )
-        Crashlytics.logException(exception)
+        crashlytics.setCustomKey(getStringResource(R.string.crashlytics_customkey_internal_error_code), internalErrorCode
+        )
+        crashlytics.recordException(exception)
     }
 }

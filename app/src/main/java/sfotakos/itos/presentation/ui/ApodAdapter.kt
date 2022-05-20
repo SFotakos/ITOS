@@ -23,11 +23,12 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.target.DrawableImageViewTarget
 import com.bumptech.glide.request.transition.Transition
-import kotlinx.android.synthetic.main.item_apod.view.*
 import sfotakos.itos.ApodDateUtils.localizedDateString
 import sfotakos.itos.R
 import sfotakos.itos.data.entities.APOD
 import sfotakos.itos.data.entities.MediaType
+import sfotakos.itos.databinding.ItemApodBinding
+import sfotakos.itos.databinding.NetworkStateItemBinding
 import sfotakos.itos.network.NetworkState
 import sfotakos.itos.network.Status
 import kotlin.math.roundToInt
@@ -42,6 +43,9 @@ class ApodAdapter(
 
     private var networkState: NetworkState? = null
 
+    private lateinit var apodBinding: ItemApodBinding
+    private lateinit var networkStateBinding: NetworkStateItemBinding
+
     companion object {
         const val ICON_MIN_SIZE = 96f
         const val LOADING_MIN_SIZE = 190f
@@ -51,10 +55,8 @@ class ApodAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
             R.layout.item_apod -> {
-                ApodViewHolder(
-                    LayoutInflater.from(parent.context)
-                        .inflate(R.layout.item_apod, parent, false), listener
-                )
+                apodBinding = ItemApodBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                ApodViewHolder(apodBinding, listener)
             }
             R.layout.network_state_item -> {
                 NetworkStateItemViewHolder(
@@ -109,27 +111,27 @@ class ApodAdapter(
         }
     }
 
-    class ApodViewHolder(itemView: View, private val listener: ApodAdapterListener) :
-        RecyclerView.ViewHolder(itemView) {
+    class ApodViewHolder(private val itemBinding: ItemApodBinding, private val listener: ApodAdapterListener) :
+        RecyclerView.ViewHolder(itemBinding.root) {
 
-        private val apodTarget = ApodTarget(itemView, itemView.apodPicture_imageView)
+        private val apodTarget = ApodTarget(itemBinding, itemBinding.apodPictureImageView)
 
         @SuppressLint("SimpleDateFormat")
         fun bind(apod: APOD) {
             val context = itemView.context
-            itemView.apodPicture_imageView.visibility = View.INVISIBLE
-            itemView.imageLoading.visibility = View.VISIBLE
+            itemBinding.apodPictureImageView.visibility = View.INVISIBLE
+            itemBinding.imageLoading.visibility = View.VISIBLE
 
             when {
                 apod.mediaType == MediaType.IMAGE.mediaTypeValue -> {
-                    itemView.apodPicture_imageView.adjustViewBounds = true
-                    itemView.apodPicture_imageView.minimumHeight =
+                    itemBinding.apodPictureImageView.adjustViewBounds = true
+                    itemBinding.apodPictureImageView.minimumHeight =
                         ScalingUtil.dpToPixel(context, LOADING_MIN_SIZE).roundToInt()
-                    itemView.apodPicture_imageView.minimumWidth =
+                    itemBinding.apodPictureImageView.minimumWidth =
                         ScalingUtil.dpToPixel(context, LOADING_MIN_SIZE).roundToInt()
-                    val layoutParams = itemView.apodPicture_imageView.layoutParams
+                    val layoutParams = itemBinding.apodPictureImageView.layoutParams
                     layoutParams.width = MATCH_PARENT
-                    itemView.apodPicture_imageView.layoutParams = layoutParams
+                    itemBinding.apodPictureImageView.layoutParams = layoutParams
                     Glide.with(context)
                         .load(apod.url)
                         .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
@@ -141,33 +143,33 @@ class ApodAdapter(
                         )
                         .into(apodTarget)
 
-                    itemView.apodPicture_imageView.setOnClickListener {
-                        ViewCompat.setTransitionName(itemView.apodPicture_imageView, apod.date)
-                        listener.expandImage(itemView.apodPicture_imageView, apod)
+                    itemBinding.apodPictureImageView.setOnClickListener {
+                        ViewCompat.setTransitionName(itemBinding.apodPictureImageView, apod.date)
+                        listener.expandImage(itemBinding.apodPictureImageView, apod)
                     }
                 }
                 apod.mediaType == MediaType.VIDEO.mediaTypeValue -> {
-                    itemView.apodPicture_imageView.isClickable = true
-                    itemView.apodPicture_imageView.adjustViewBounds = false
-                    itemView.apodPicture_imageView.minimumHeight =
+                    itemBinding.apodPictureImageView.isClickable = true
+                    itemBinding.apodPictureImageView.adjustViewBounds = false
+                    itemBinding.apodPictureImageView.minimumHeight =
                         ScalingUtil.dpToPixel(context, ICON_MIN_SIZE).roundToInt()
-                    itemView.apodPicture_imageView.minimumWidth =
+                    itemBinding.apodPictureImageView.minimumWidth =
                         ScalingUtil.dpToPixel(context, ICON_MIN_SIZE).roundToInt()
-                    val layoutParams = itemView.apodPicture_imageView.layoutParams
+                    val layoutParams = itemBinding.apodPictureImageView.layoutParams
                     layoutParams.width = WRAP_CONTENT
-                    itemView.apodPicture_imageView.setImageDrawable(
+                    itemBinding.apodPictureImageView.setImageDrawable(
                         ContextCompat.getDrawable(context, R.drawable.ic_play_white_24dp)
                     )
-                    itemView.apodPicture_imageView.setOnClickListener {
+                    itemBinding.apodPictureImageView.setOnClickListener {
                         context.startActivity(Intent(ACTION_VIEW, Uri.parse(apod.url)))
                     }
-                    itemView.apodPicture_imageView.visibility = View.VISIBLE
-                    itemView.imageLoading.visibility = View.GONE
+                    itemBinding.apodPictureImageView.visibility = View.VISIBLE
+                    itemBinding.imageLoading.visibility = View.GONE
                 }
                 else -> throw IllegalStateException()
             }
-            itemView.apodTitle_textView.text = apod.title
-            itemView.apodCopyright_textView.text = if (apod.copyright.isNullOrBlank()) {
+            itemBinding.apodTitleTextView.text = apod.title
+            itemBinding.apodCopyrightTextView.text = if (apod.copyright.isNullOrBlank()) {
                 context.getString(
                     R.string.copyright_format,
                     context.getString(R.string.public_domain)
@@ -177,12 +179,12 @@ class ApodAdapter(
             }
 
             if (apod.explanation.isEmpty())
-                itemView.apodDescription_textView.visibility = View.GONE
+                itemBinding.apodDescriptionTextView.visibility = View.GONE
             else
-                itemView.apodDescription_textView.visibility = View.VISIBLE
+                itemBinding.apodDescriptionTextView.visibility = View.VISIBLE
 
-            itemView.apodDate_textView.text = localizedDateString(apod.date)
-            itemView.apodDescription_textView.text = apod.explanation
+            itemBinding.apodDateTextView.text = localizedDateString(apod.date)
+            itemBinding.apodDescriptionTextView.text = apod.explanation
         }
     }
 
@@ -222,42 +224,42 @@ class ApodAdapter(
         fun expandImage(apodPicture: View, apod: APOD)
     }
 
-    class ApodTarget(private val itemView: View, imageView: ImageView) :
+    class ApodTarget(private val itemBinding: ItemApodBinding, imageView: ImageView) :
         DrawableImageViewTarget(imageView) {
 
         override fun onLoadStarted(placeholder: Drawable?) {
-            itemView.apodPicture_imageView.visibility = View.INVISIBLE
-            itemView.imageLoading.visibility = View.VISIBLE
-            itemView.imageLoading.playAnimation()
+            itemBinding.apodPictureImageView.visibility = View.INVISIBLE
+            itemBinding.imageLoading.visibility = View.VISIBLE
+            itemBinding.imageLoading.playAnimation()
             super.onLoadStarted(placeholder)
         }
 
         override fun onLoadFailed(errorDrawable: Drawable?) {
-            itemView.apodPicture_imageView.visibility = View.VISIBLE
-            itemView.imageLoading.visibility = View.GONE
-            val layoutParams = itemView.apodPicture_imageView.layoutParams
-            val context = itemView.context
+            itemBinding.apodPictureImageView.visibility = View.VISIBLE
+            itemBinding.imageLoading.visibility = View.GONE
+            val layoutParams = itemBinding.apodPictureImageView.layoutParams
+            val context = itemBinding.root.context
             layoutParams.height = ScalingUtil.dpToPixel(context, LOADING_MIN_SIZE).roundToInt()
             layoutParams.width = ScalingUtil.dpToPixel(context, LOADING_MIN_SIZE).roundToInt()
-            itemView.apodPicture_imageView.layoutParams = layoutParams
-            itemView.apodPicture_imageView.setImageDrawable(
+            itemBinding.apodPictureImageView.layoutParams = layoutParams
+            itemBinding.apodPictureImageView.setImageDrawable(
                 ContextCompat.getDrawable(context, R.drawable.ic_destroyed_planet)
             )
-            itemView.apodPicture_imageView.isClickable = false
+            itemBinding.apodPictureImageView.isClickable = false
             super.onLoadFailed(errorDrawable)
         }
 
         override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
-            itemView.apodPicture_imageView.minimumHeight = 0
-            itemView.apodPicture_imageView.minimumWidth = 0
-            itemView.apodPicture_imageView.visibility = View.VISIBLE
-            itemView.imageLoading.visibility = View.GONE
-            val layoutParams = itemView.apodPicture_imageView.layoutParams
+            itemBinding.apodPictureImageView.minimumHeight = 0
+            itemBinding.apodPictureImageView.minimumWidth = 0
+            itemBinding.apodPictureImageView.visibility = View.VISIBLE
+            itemBinding.imageLoading.visibility = View.GONE
+            val layoutParams = itemBinding.apodPictureImageView.layoutParams
             layoutParams.height = WRAP_CONTENT
             layoutParams.width = MATCH_PARENT
-            itemView.apodPicture_imageView.layoutParams = layoutParams
-            itemView.apodPicture_imageView.setImageDrawable(resource)
-            itemView.apodPicture_imageView.isClickable = true
+            itemBinding.apodPictureImageView.layoutParams = layoutParams
+            itemBinding.apodPictureImageView.setImageDrawable(resource)
+            itemBinding.apodPictureImageView.isClickable = true
             super.onResourceReady(resource, transition)
         }
     }
